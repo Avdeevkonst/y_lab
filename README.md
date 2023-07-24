@@ -20,8 +20,12 @@ CLIENT_ORIGIN=****
 
 ### запуск проекта
 1. создание папки миграции ```alembic init migrations```
-2. инициалиция первый миграций ```alembic revision --autogenerate -m ""```
-3. применений миграций в бд ```alembic upgrade head```
-4. запуски приложения ```uvicorn app.main:app --reload```
+2. настроить файл /migrations/env.py 
+```from app.db.models import Base```
+```target_metadata = Base.metadata```
+3. настойка файла alembic.ini ```sqlalchemy.url = driver://user:pass@localhost/dbname```
+3. инициалиция первый миграций ```alembic revision --autogenerate -m ""```
+4. применений миграций в бд ```alembic upgrade head```
+5. запуски приложения ```uvicorn app.main:app --reload```
 
 
