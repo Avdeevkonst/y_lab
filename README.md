@@ -31,7 +31,9 @@ CLIENT_ORIGIN=****
 
 
 ### запуск docker 
+```
 docker-compose up -d
+```
 ### запуск тестов docker
 ```shell
 docker-compose -f docker-compose-test.yaml up -d
