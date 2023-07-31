@@ -1,4 +1,5 @@
-from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -12,8 +13,7 @@ class Settings(BaseSettings):
 
     CLIENT_ORIGIN: str
 
-    class Config:
-        env_file = 'database.env'
+    model_config = SettingsConfigDict(env_file=".env")
 
 
 settings = Settings()

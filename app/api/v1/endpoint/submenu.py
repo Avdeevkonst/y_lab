@@ -68,3 +68,6 @@ def delete_submenu(target_submenu_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"status": True,
             "message": "The submenu has been deleted"}
+
+
+

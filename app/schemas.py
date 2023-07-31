@@ -1,5 +1,5 @@
 import uuid
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from decimal import Decimal
 
 
@@ -7,8 +7,7 @@ class MenuBaseSchema(BaseModel):
     title: str
     description: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CreateMenuSchema(MenuBaseSchema):
@@ -23,8 +22,7 @@ class UpdateMenuSchema(BaseModel):
     title: str
     description: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FilteredMenuResponse(MenuBaseSchema):
@@ -36,8 +34,7 @@ class SubmenuBaseSchema(BaseModel):
     description: str
     menu_id: uuid.UUID | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CreateSubmenuSchema(SubmenuBaseSchema):
@@ -53,8 +50,7 @@ class UpdateSubmenuSchema(BaseModel):
     description: str
     menu_id: uuid.UUID | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class FilteredSubmenuResponse(SubmenuBaseSchema):
@@ -67,8 +63,7 @@ class DishBaseSchema(BaseModel):
     price: str
     submenu_id: uuid.UUID | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CreateDishSchema(DishBaseSchema):
@@ -77,7 +72,6 @@ class CreateDishSchema(DishBaseSchema):
 
 class DishResponse(DishBaseSchema):
     id: uuid.UUID
-
 
 
 class UpdateDishSchema(DishBaseSchema):
