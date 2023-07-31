@@ -1,49 +1,37 @@
 version: '3.8'
-
 services:
-
-  database:
+  database_test:
     image: postgres:15.1-alpine
-    container_name: database
-    expose:
-      - "5432"
-    ports:
-      - "5432:5432"
+    container_name: ylab_db_test
+    env_file:
+      - .env
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-    volumes:
-      - ylab_pgdata_test:/var/lib/postgresql/data/
-    env_file:
-      - .env
-    networks:
-      - ylab_network_test
+    ports:
+      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}"]
-      interval: 10s
+      test: [ "CMD-SHELL", "pg_isready", "-U", "${POSTGRES_USER}", "-d", "${POSTGRES_DB}" ]
+      interval: 3s
       timeout: 30s
-      retries: 5
+      retries: 3
 
-  backend:
+
+  app_test:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: backend
-    networks:
-      - ylab_network_test
-    depends_on:
-      database:
-        condition: service_healthy
+    container_name: ylab_app_test
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=avdeev97
+      - POSTGRES_DB=ylab
+      - POSTGRES_HOST=database_test
+      - DATABASE_PORT=5432
     ports:
-      - "8000:80"
-    env_file:
-      - .env
-    command: sh -c "pytest -v"
-
-networks:
-  ylab_network_test:
-    name: ylab_network_test
-volumes:
-  ylab_pgdata_test:
-    name: ylab_pgdata_test
+      - '8080:8000'
+    entrypoint: sh -c "alembic upgrade head && pytest -v"
+    depends_on:
+      database_test:
+        condition: service_healthy

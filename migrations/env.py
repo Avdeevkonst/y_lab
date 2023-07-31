@@ -5,11 +5,18 @@ import sqlalchemy
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
+from app.db.database import POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_DB, DATABASE_PORT
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 section = config.config_ini_section
+
+config.set_section_option(section, "POSTGRES_HOST", POSTGRES_HOST)
+config.set_section_option(section, "DATABASE_PORT", DATABASE_PORT)
+config.set_section_option(section, "POSTGRES_DB", POSTGRES_DB) 
+config.set_section_option(section, "POSTGRES_USER", POSTGRES_USER)
+config.set_section_option(section, "POSTGRES_PASSWORD", POSTGRES_PASSWORD)
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
@@ -17,6 +24,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
+
 
 
 from app.db.models import Base
@@ -52,6 +60,8 @@ def run_migrations_offline() -> None:
 
     with context.begin_transaction():
         context.run_migrations()
+
+
 
 
 def run_migrations_online() -> None:

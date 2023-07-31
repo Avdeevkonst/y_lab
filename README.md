@@ -9,6 +9,7 @@
 ### запуск базы данных
 1. создать в корне проекта файл database.env в котором необходимо указать 
 (#смотреть файл config.py)
+```
 POSTGRES_USER=****
 POSTGRES_PASSWORD=****
 POSTGRES_DB=****
@@ -16,7 +17,7 @@ POSTGRES_HOST=****
 POSTGRES_HOSTNAME=****
 DATABASE_PORT=****
 CLIENT_ORIGIN=****
-
+```
 
 ### запуск проекта
 1. создание папки миграции ```alembic init migrations```
@@ -29,3 +30,10 @@ CLIENT_ORIGIN=****
 5. запуски приложения ```uvicorn app.main:app --reload```
 
 
+### запуск docker 
+docker-compose up -d
+### запуск тестов docker
+```shell
+docker-compose -f docker-compose-test.yaml up -d
+docker start -a fastapi_test_app
+```

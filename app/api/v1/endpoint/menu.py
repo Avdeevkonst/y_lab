@@ -73,4 +73,3 @@ def delete_menu(target_menu_id: str, db: Session = Depends(get_db)):
                             detail=f'No menu with this id: {target_menu_id} found')
     menu_query.delete(synchronize_session=False)
     db.commit()
-    return menu

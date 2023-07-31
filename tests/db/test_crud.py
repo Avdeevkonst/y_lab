@@ -1,7 +1,7 @@
-from tests.conftest import client
+from tests.conftest import *
 
 
-def test_get_menus():
+def test_get_all_menus():
     res = client.get("/api/v1/menus/")
     assert res.status_code == 200
     assert res.json() == []
