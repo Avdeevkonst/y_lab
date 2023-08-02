@@ -1,11 +1,18 @@
 from logging.config import fileConfig
 
 import sqlalchemy
+
 # from app.db.database import Base
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
-from app.db.database import POSTGRES_HOST, POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_DB, DATABASE_PORT
+from app.db.database import (
+    POSTGRES_HOST,
+    POSTGRES_PASSWORD,
+    POSTGRES_USER,
+    POSTGRES_DB,
+    DATABASE_PORT,
+)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -14,7 +21,7 @@ section = config.config_ini_section
 
 config.set_section_option(section, "POSTGRES_HOST", POSTGRES_HOST)
 config.set_section_option(section, "DATABASE_PORT", DATABASE_PORT)
-config.set_section_option(section, "POSTGRES_DB", POSTGRES_DB) 
+config.set_section_option(section, "POSTGRES_DB", POSTGRES_DB)
 config.set_section_option(section, "POSTGRES_USER", POSTGRES_USER)
 config.set_section_option(section, "POSTGRES_PASSWORD", POSTGRES_PASSWORD)
 # Interpret the config file for Python logging.
@@ -26,8 +33,8 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 
 
-
 from app.db.models import Base
+
 # target_metadata = Menu.Base.metadata
 target_metadata = Base.metadata
 
@@ -62,8 +69,6 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
-
-
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
@@ -78,9 +83,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

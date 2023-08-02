@@ -1,6 +1,6 @@
 import uuid
+
 from pydantic import BaseModel, ConfigDict
-from decimal import Decimal
 
 
 class MenuBaseSchema(BaseModel):

@@ -1,9 +1,10 @@
-from app import schemas
-from app.db import models
-from sqlalchemy.orm import Session
-from fastapi import Depends, HTTPException, status, APIRouter, Response
+from fastapi import Depends, HTTPException, status, APIRouter
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
+
+from app import schemas
+from app.db import models
 from app.db.database import get_db
 from app.db.models import Submenu, Menu, Dish
 
@@ -11,7 +12,7 @@ router = APIRouter()
 
 
 # Get menus
-@router.get('/')
+@router.get("/")
 # @router.get('/', response_model=schemas.ListMenuResponse)
 def get_menus(db: Session = Depends(get_db)):
     menus = db.query(Menu).all()
@@ -20,29 +21,48 @@ def get_menus(db: Session = Depends(get_db)):
         submenus = db.query(Submenu).filter(Submenu.menu_id == menu.id).all()
         dishes_count = 0
         for submenu in submenus:
-            dishes_count += len(db.query(Dish).filter(Dish.submenu_id == submenu.id).all())
-        menu_response.append({'id': menu.id, 'title': menu.title, 'description': menu.description,
-                              'submenus_count': len(submenus), 'dishes_count': dishes_count})
+            dishes_count += len(
+                db.query(Dish).filter(Dish.submenu_id == submenu.id).all()
+            )
+        menu_response.append(
+            {
+                "id": menu.id,
+                "title": menu.title,
+                "description": menu.description,
+                "submenus_count": len(submenus),
+                "dishes_count": dishes_count,
+            }
+        )
     return JSONResponse(content=jsonable_encoder(menu_response))
 
 
 # Get a single menu
-@router.get('/{target_menu_id}')
+@router.get("/{target_menu_id}")
 def get_menu(target_menu_id: str, db: Session = Depends(get_db)):
     menu = db.query(models.Menu).filter(models.Menu.id == target_menu_id).first()
     if not menu:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='menu not found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="menu not found"
+        )
     submenus = db.query(Submenu).filter(Submenu.menu_id == menu.id).all()
     dishes_count = 0
     for submenu in submenus:
-        dishes_count += len(db.query(models.Dish).filter(Dish.submenu_id == submenu.id).all())
-    menu_response = {'id': menu.id, 'title': menu.title, 'description': menu.description,
-                     'submenus_count': len(submenus), 'dishes_count': dishes_count}
+        dishes_count += len(
+            db.query(models.Dish).filter(Dish.submenu_id == submenu.id).all()
+        )
+    menu_response = {
+        "id": menu.id,
+        "title": menu.title,
+        "description": menu.description,
+        "submenus_count": len(submenus),
+        "dishes_count": dishes_count,
+    }
     return JSONResponse(content=jsonable_encoder(menu_response))
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED, response_model=schemas.MenuResponse)
+@router.post(
+    "/", status_code=status.HTTP_201_CREATED, response_model=schemas.MenuResponse
+)
 def create_menu(menu: schemas.CreateMenuSchema, db: Session = Depends(get_db)):
     new_menu = models.Menu(**menu.model_dump())
     db.add(new_menu)
@@ -51,25 +71,31 @@ def create_menu(menu: schemas.CreateMenuSchema, db: Session = Depends(get_db)):
     return new_menu
 
 
-@router.patch('/{target_menu_id}', response_model=schemas.MenuResponse)
-def update_menu(target_menu_id: str, menu: schemas.UpdateMenuSchema, db: Session = Depends(get_db)):
+@router.patch("/{target_menu_id}", response_model=schemas.MenuResponse)
+def update_menu(
+        target_menu_id: str, menu: schemas.UpdateMenuSchema, db: Session = Depends(get_db)
+):
     menu_query = db.query(Menu).filter(Menu.id == target_menu_id)
     updated_menu = menu_query.first()
 
     if not updated_menu:
-        raise HTTPException(status_code=status.HTTP_200_OK,
-                            detail=f'No menu with this id: {target_menu_id} found')
+        raise HTTPException(
+            status_code=status.HTTP_200_OK,
+            detail=f"No menu with this id: {target_menu_id} found",
+        )
     menu_query.update(menu.model_dump(exclude_unset=True), synchronize_session=False)
     db.commit()
     return updated_menu
 
 
-@router.delete('/{target_menu_id}')
+@router.delete("/{target_menu_id}")
 def delete_menu(target_menu_id: str, db: Session = Depends(get_db)):
     menu_query = db.query(Menu).filter(Menu.id == target_menu_id)
     menu = menu_query.first()
     if not menu:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f'No menu with this id: {target_menu_id} found')
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No menu with this id: {target_menu_id} found",
+        )
     menu_query.delete(synchronize_session=False)
     db.commit()
