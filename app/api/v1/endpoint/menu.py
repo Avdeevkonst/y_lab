@@ -1,101 +1,48 @@
-from fastapi import Depends, HTTPException, status, APIRouter
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+import uuid
+from typing import Annotated
 
-from app import schemas
-from app.db import models
-from app.db.database import get_db
-from app.db.models import Submenu, Menu, Dish
+from fastapi import APIRouter, Body, Depends, status
+from starlette.responses import JSONResponse
+
+from app.common.services.menu import MenuService
+from app.db.models import Menu
+from app.schemas import CreateMenuSchema, MenuBaseSchema, MenuResponse, UpdateMenuSchema
 
 router = APIRouter()
 
 
-# Get menus
-@router.get("/")
-# @router.get('/', response_model=schemas.ListMenuResponse)
-def get_menus(db: Session = Depends(get_db)):
-    menus = db.query(Menu).all()
-    menu_response = []
-    for menu in menus:
-        submenus = db.query(Submenu).filter(Submenu.menu_id == menu.id).all()
-        dishes_count = 0
-        for submenu in submenus:
-            dishes_count += len(
-                db.query(Dish).filter(Dish.submenu_id == submenu.id).all()
-            )
-        menu_response.append(
-            {
-                "id": menu.id,
-                "title": menu.title,
-                "description": menu.description,
-                "submenus_count": len(submenus),
-                "dishes_count": dishes_count,
-            }
-        )
-    return JSONResponse(content=jsonable_encoder(menu_response))
+# Возвращает все меню
+@router.get("/", response_model=list[MenuResponse])
+def get_all_menus(menu: Annotated[MenuService, Depends()]) -> list[MenuBaseSchema]:
+    return menu.get_all()
 
 
-# Get a single menu
-@router.get("/{target_menu_id}")
-def get_menu(target_menu_id: str, db: Session = Depends(get_db)):
-    menu = db.query(models.Menu).filter(models.Menu.id == target_menu_id).first()
-    if not menu:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="menu not found"
-        )
-    submenus = db.query(Submenu).filter(Submenu.menu_id == menu.id).all()
-    dishes_count = 0
-    for submenu in submenus:
-        dishes_count += len(
-            db.query(models.Dish).filter(Dish.submenu_id == submenu.id).all()
-        )
-    menu_response = {
-        "id": menu.id,
-        "title": menu.title,
-        "description": menu.description,
-        "submenus_count": len(submenus),
-        "dishes_count": dishes_count,
-    }
-    return JSONResponse(content=jsonable_encoder(menu_response))
+# Возвращает меню
+@router.get("/{target_menu_id}", response_model=MenuResponse)
+def get_menu(target_menu_id: uuid.UUID, menu: Annotated[MenuService, Depends()]):
+    return menu.get(target_menu_id)
 
 
-@router.post(
-    "/", status_code=status.HTTP_201_CREATED, response_model=schemas.MenuResponse
-)
-def create_menu(menu: schemas.CreateMenuSchema, db: Session = Depends(get_db)):
-    new_menu = models.Menu(**menu.model_dump())
-    db.add(new_menu)
-    db.commit()
-    db.refresh(new_menu)
-    return new_menu
+# Создаёт меню
+@router.post("/", response_model=MenuResponse, status_code=status.HTTP_201_CREATED)
+def create_menu(menu_data: CreateMenuSchema, menu: Annotated[MenuService, Depends()]):
+    return menu.create(menu_data)
 
 
-@router.patch("/{target_menu_id}", response_model=schemas.MenuResponse)
+# Обновляет меню
+@router.patch("/{target_menu_id}", response_model=MenuResponse)
 def update_menu(
-        target_menu_id: str, menu: schemas.UpdateMenuSchema, db: Session = Depends(get_db)
-):
-    menu_query = db.query(Menu).filter(Menu.id == target_menu_id)
-    updated_menu = menu_query.first()
-
-    if not updated_menu:
-        raise HTTPException(
-            status_code=status.HTTP_200_OK,
-            detail=f"No menu with this id: {target_menu_id} found",
-        )
-    menu_query.update(menu.model_dump(exclude_unset=True), synchronize_session=False)
-    db.commit()
-    return updated_menu
+    target_menu_id: uuid.UUID,
+    menu_data: Annotated[UpdateMenuSchema, Body(...)],
+    menu: Annotated[MenuService, Depends()],
+) -> type[Menu]:
+    return menu.update(target_menu_id, menu_data)
 
 
-@router.delete("/{target_menu_id}")
-def delete_menu(target_menu_id: str, db: Session = Depends(get_db)):
-    menu_query = db.query(Menu).filter(Menu.id == target_menu_id)
-    menu = menu_query.first()
-    if not menu:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No menu with this id: {target_menu_id} found",
-        )
-    menu_query.delete(synchronize_session=False)
-    db.commit()
+# Удаляет меню
+@router.delete("/{target_menu_id}", status_code=status.HTTP_200_OK)
+def delete_menu(
+    target_menu_id: uuid.UUID,
+    menu: Annotated[MenuService, Depends()],
+) -> JSONResponse:
+    return menu.delete(target_menu_id)

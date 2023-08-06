@@ -32,7 +32,6 @@ class FilteredMenuResponse(MenuBaseSchema):
 class SubmenuBaseSchema(BaseModel):
     title: str
     description: str
-    menu_id: uuid.UUID | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -48,7 +47,6 @@ class SubmenuResponse(SubmenuBaseSchema):
 class UpdateSubmenuSchema(BaseModel):
     title: str
     description: str
-    menu_id: uuid.UUID | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

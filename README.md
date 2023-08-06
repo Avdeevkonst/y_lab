@@ -1,13 +1,13 @@
 ## y_lab menus
 
-### установка 
+### установка
 
-1. создать виртуальное окружение ```python -m venv venv``` 
+1. создать виртуальное окружение ```python -m venv venv```
 2. активировать виртуальное окружение ```source venv/bin/activate```
 3. установка зависимостей ```pip install -r requirements.txt```
 
 ### запуск базы данных
-1. создать в корне проекта файл database.env в котором необходимо указать 
+1. создать в корне проекта файл database.env в котором необходимо указать
 (#смотреть файл config.py)
 ```
 POSTGRES_USER=****
@@ -21,7 +21,7 @@ CLIENT_ORIGIN=****
 
 ### запуск проекта
 1. создание папки миграции ```alembic init migrations```
-2. настроить файл /migrations/env.py 
+2. настроить файл /migrations/env.py
 ```from app.db.models import Base```
 ```target_metadata = Base.metadata```
 3. настойка файла alembic.ini ```sqlalchemy.url = driver://user:pass@localhost/dbname```
@@ -30,7 +30,7 @@ CLIENT_ORIGIN=****
 5. запуски приложения ```uvicorn app.main:app --reload```
 
 
-### запуск docker 
+### запуск docker
 ```
 docker-compose up -d
 ```
