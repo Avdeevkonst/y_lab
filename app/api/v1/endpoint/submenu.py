@@ -1,10 +1,14 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, status
 
 from app.common.services.submenu import SubMenuService
-from app.schemas import CreateSubmenuSchema, SubmenuResponse, UpdateSubmenuSchema
+from app.schemas import (
+    CreateSubmenuSchema,
+    FilteredSubmenuResponse,
+    SubmenuResponse,
+    UpdateSubmenuSchema,
+)
 
 router = APIRouter()
 
@@ -15,23 +19,20 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
     summary="Возвращает список подменю",
 )
-def get_all_submenus(
-    target_menu_id: uuid.UUID,
-    submenu: Annotated[SubMenuService, Depends()],
-):
+def get_submenus(target_menu_id: uuid.UUID, submenu: SubMenuService = Depends()):
     return submenu.get_all(target_menu_id)
 
 
 @router.get(
     "/{target_submenu_id}",
-    response_model=SubmenuResponse,
+    response_model=FilteredSubmenuResponse,
     status_code=status.HTTP_200_OK,
     summary="Возвращает определённое подменю",
 )
 def get_submenu(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
-    submenu: Annotated[SubMenuService, Depends()],
+    submenu: SubMenuService = Depends(),
 ):
     return submenu.get(target_menu_id, target_submenu_id)
 
@@ -45,7 +46,7 @@ def get_submenu(
 def create_submenu(
     target_menu_id: uuid.UUID,
     submenu_data: CreateSubmenuSchema,
-    submenu: Annotated[SubMenuService, Depends()],
+    submenu: SubMenuService = Depends(),
 ):
     return submenu.create(target_menu_id, submenu_data)
 
@@ -59,20 +60,21 @@ def create_submenu(
 def update_submenu(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
-    submenu_data: Annotated[UpdateSubmenuSchema, Body(...)],
-    submenu: Annotated[SubMenuService, Depends()],
+    submenu_data: UpdateSubmenuSchema = Body(...),
+    submenu: SubMenuService = Depends(),
 ):
     return submenu.update(target_menu_id, target_submenu_id, submenu_data)
 
 
 @router.delete(
     "/{target_submenu_id}",
+    response_model=SubmenuResponse,
     status_code=status.HTTP_200_OK,
     summary="Удаляет подменю",
 )
 def delete_submenu(
-    # target_menu_id: uuid.UUID,
+    target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
-    submenu: Annotated[SubMenuService, Depends()],
+    submenu: SubMenuService = Depends(),
 ):
-    return submenu.delete(target_submenu_id)
+    return submenu.delete(target_menu_id, target_submenu_id)

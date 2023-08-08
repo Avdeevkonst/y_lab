@@ -6,7 +6,7 @@ from starlette.responses import JSONResponse
 
 from app.common.repository.menu import MenuRepository
 from app.db.models import Menu
-from app.schemas import CreateMenuSchema, MenuResponse, UpdateMenuSchema
+from app.schemas import CreateMenuSchema, GetAllMenu, UpdateMenuSchema
 from cache.my_redis import isinstance_cache
 
 
@@ -15,10 +15,10 @@ class MenuService:
         self.repository = repository
         self.cache = isinstance_cache
 
-    def get_all(self) -> list[MenuResponse]:
+    def get_all(self) -> list[GetAllMenu]:
         return self.cache.cached_or_fetch("all_menus", self.repository.get_all)
 
-    def get(self, target_menu_id: uuid.UUID) -> MenuResponse:
+    def get(self, target_menu_id: uuid.UUID) -> GetAllMenu:
         return self.cache.cached_or_fetch(
             f"menu_{target_menu_id}",
             self.repository.get,

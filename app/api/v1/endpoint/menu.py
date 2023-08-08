@@ -6,7 +6,13 @@ from starlette.responses import JSONResponse
 
 from app.common.services.menu import MenuService
 from app.db.models import Menu
-from app.schemas import CreateMenuSchema, MenuBaseSchema, MenuResponse, UpdateMenuSchema
+from app.schemas import (
+    CreateMenuSchema,
+    GetAllMenu,
+    MenuBaseSchema,
+    MenuResponse,
+    UpdateMenuSchema,
+)
 
 router = APIRouter()
 
@@ -18,7 +24,7 @@ def get_all_menus(menu: Annotated[MenuService, Depends()]) -> list[MenuBaseSchem
 
 
 # Возвращает меню
-@router.get("/{target_menu_id}", response_model=MenuResponse)
+@router.get("/{target_menu_id}", response_model=GetAllMenu)
 def get_menu(target_menu_id: uuid.UUID, menu: Annotated[MenuService, Depends()]):
     return menu.get(target_menu_id)
 

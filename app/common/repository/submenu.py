@@ -9,7 +9,12 @@ from starlette.responses import JSONResponse
 
 from app.db.database import get_db
 from app.db.models import Dish, Menu, Submenu
-from app.schemas import CreateSubmenuSchema, SubmenuResponse, UpdateSubmenuSchema
+from app.schemas import (
+    CreateSubmenuSchema,
+    FilteredSubmenuResponse,
+    SubmenuResponse,
+    UpdateSubmenuSchema,
+)
 
 
 class SubMenuRepository:
@@ -65,7 +70,7 @@ class SubMenuRepository:
         self,
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
-    ) -> SubmenuResponse:
+    ) -> FilteredSubmenuResponse:
         submenu = (
             self.session.query(Submenu)
             .filter(Submenu.id == target_submenu_id, Submenu.menu_id == target_menu_id)
@@ -83,7 +88,7 @@ class SubMenuRepository:
             .scalar()
         )
 
-        return SubmenuResponse(
+        return FilteredSubmenuResponse(
             id=submenu.id,
             title=submenu.title,
             description=submenu.description,
@@ -116,17 +121,21 @@ class SubMenuRepository:
 
     def delete(
         self,
-        # target_menu_id: uuid.UUID,
+        target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
     ) -> JSONResponse:
         submenu = (
-            self.session.query(Submenu).filter(Submenu.id == target_submenu_id).first()
+            self.session.query(Submenu)
+            .filter(Submenu.id == target_submenu_id, Submenu.menu_id == target_menu_id)
+            .first()
         )
+
         if not submenu:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="submenu not found",
             )
+
         self.session.delete(submenu)
         self.session.commit()
         return JSONResponse(

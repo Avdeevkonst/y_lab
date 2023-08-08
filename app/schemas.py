@@ -18,6 +18,11 @@ class MenuResponse(MenuBaseSchema):
     id: uuid.UUID
 
 
+class GetAllMenu(MenuResponse):
+    submenus_count: int | None
+    dishes_count: int | None
+
+
 class UpdateMenuSchema(BaseModel):
     title: str
     description: str
@@ -25,41 +30,32 @@ class UpdateMenuSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class FilteredMenuResponse(MenuBaseSchema):
-    id: uuid.UUID
-
-
-class SubmenuBaseSchema(BaseModel):
-    title: str
-    description: str
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class CreateSubmenuSchema(SubmenuBaseSchema):
+class SubmenuBaseSchema(MenuBaseSchema):
     pass
 
 
-class SubmenuResponse(SubmenuBaseSchema):
+class CreateSubmenuSchema(CreateMenuSchema):
+    pass
+
+
+class SubmenuResponse(MenuResponse):
     id: uuid.UUID
 
 
-class UpdateSubmenuSchema(BaseModel):
-    title: str
-    description: str
-
-    model_config = ConfigDict(from_attributes=True)
+class UpdateSubmenuSchema(UpdateMenuSchema):
+    pass
 
 
 class FilteredSubmenuResponse(SubmenuBaseSchema):
     id: uuid.UUID
+    # submenus_count: int | None
+    dishes_count: int | None
 
 
 class DishBaseSchema(BaseModel):
     title: str
     description: str
     price: str
-    submenu_id: uuid.UUID | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

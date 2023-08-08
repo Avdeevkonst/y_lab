@@ -21,9 +21,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(menu.router, tags=["Menus"], prefix="/api/v1/menus")
-app.include_router(submenu.router, tags=["Submenus"], prefix="/api/v1/submenus")
-app.include_router(dish.router, tags=["Dishes"], prefix="/api/v1/dish")
+app.include_router(
+    menu.router,
+    prefix="/api/v1/menus",
+    tags=["menus"],
+)
+app.include_router(
+    submenu.router,
+    prefix="/api/v1/menus/{target_menu_id}/submenus",
+    tags=["submenus"],
+)
+app.include_router(
+    dish.router,
+    prefix="/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}/dishes",
+    tags=["dishes"],
+)
 
 
 @app.on_event("startup")

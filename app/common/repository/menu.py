@@ -8,7 +8,7 @@ from starlette.responses import JSONResponse
 
 from app.db.database import get_db
 from app.db.models import Dish, Menu, Submenu
-from app.schemas import CreateMenuSchema, MenuResponse, UpdateMenuSchema
+from app.schemas import CreateMenuSchema, GetAllMenu, UpdateMenuSchema
 
 
 class MenuRepository:
@@ -17,9 +17,9 @@ class MenuRepository:
         self.model = Menu
 
     # Функция для подсчета количества подменю и блюд, и выдачи списка меню
-    def get_all(self) -> list[MenuResponse]:
+    def get_all(self) -> list[GetAllMenu]:
         menus = self.session.query(self.model).all()
-        menu_responses = []
+        list_menu_responses = []
         for menu in menus:
             submenus_count = (
                 self.session.query(Submenu).filter(Submenu.menu_id == menu.id).count()
@@ -30,18 +30,17 @@ class MenuRepository:
                 .filter(Submenu.menu_id == menu.id)
                 .count()
             )
-            menu_response = MenuResponse(
+            menu_response = GetAllMenu(
                 id=menu.id,
                 title=menu.title,
                 description=menu.description,
                 submenus_count=submenus_count,
                 dishes_count=dishes_count,
             )
-            menu_responses.append(menu_response)
-        return menu_responses
+            list_menu_responses.append(menu_response)
+        return list_menu_responses
 
-    def get(self, target_menu_id: uuid.UUID) -> MenuResponse:
-        # Получаем меню по айди
+    def get(self, target_menu_id: uuid.UUID) -> GetAllMenu:
         menu = (
             self.session.query(self.model)
             .filter(self.model.id == target_menu_id)
@@ -54,7 +53,6 @@ class MenuRepository:
                 detail="menu not found",
             )
 
-        # Подсчитываем количество подменю и блюд для данного меню
         submenus_count = (
             self.session.query(Submenu)
             .filter(Submenu.menu_id == target_menu_id)
@@ -66,14 +64,13 @@ class MenuRepository:
             .filter(Submenu.menu_id == target_menu_id)
             .count()
         )
-
-        # Создаем экземпляр схемы AllMenu и заполняем поля
-        return MenuResponse(
+        # breakpoint()
+        return GetAllMenu(
             id=menu.id,
             title=menu.title,
             description=menu.description,
-            submenus_count=submenus_count,
-            dishes_count=dishes_count,
+            submenus_count=str(submenus_count),
+            dishes_count=str(dishes_count),
         )
 
     def create(self, menu: CreateMenuSchema) -> Menu:

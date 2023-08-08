@@ -61,7 +61,7 @@ class DishRepository:
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
         target_dish_id: uuid.UUID,
-    ) -> Submenu:
+    ) -> Dish:
         dish = (
             self.session.query(Dish)
             .join(Submenu, Submenu.id == Dish.submenu_id)

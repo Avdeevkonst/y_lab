@@ -1,7 +1,7 @@
 from tests.conftest import client
 
 prefix = "/api/v1"
-test_data = {}
+test_data: dict[str, str] = {}
 
 
 def test_get_all_menus():

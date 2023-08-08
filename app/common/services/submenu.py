@@ -6,7 +6,12 @@ from starlette.responses import JSONResponse
 
 from app.common.repository.submenu import SubMenuRepository
 from app.db.models import Submenu
-from app.schemas import CreateSubmenuSchema, SubmenuResponse, UpdateSubmenuSchema
+from app.schemas import (
+    CreateSubmenuSchema,
+    FilteredSubmenuResponse,
+    SubmenuResponse,
+    UpdateSubmenuSchema,
+)
 from cache.my_redis import isinstance_cache
 
 
@@ -26,7 +31,7 @@ class SubMenuService:
         self,
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
-    ) -> SubmenuResponse:
+    ) -> FilteredSubmenuResponse:
         return self.cache.cached_or_fetch(
             f"submenu_{target_submenu_id}",
             self.repository.get,
@@ -54,10 +59,10 @@ class SubMenuService:
 
     def delete(
         self,
-        # target_menu_id: uuid.UUID,
+        target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
     ) -> JSONResponse:
-        item = self.repository.delete(target_submenu_id)
+        item = self.repository.delete(target_menu_id, target_submenu_id)
         self.cache.invalidate(
             "all_submenus",
             "all_menus",

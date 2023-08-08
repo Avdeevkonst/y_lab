@@ -18,13 +18,13 @@ app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True, scope="session")
 def test_db():
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     yield db
     db.close()
-    Base.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(autouse=True, scope="session")

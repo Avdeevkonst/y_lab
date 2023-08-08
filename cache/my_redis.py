@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import redis
 from fastapi.encoders import jsonable_encoder
@@ -8,16 +9,22 @@ class Cache:
     def __init__(self, redis_host: str):
         self.redis_client = redis.StrictRedis(host=redis_host, port=6379, db=0)
 
-    def get(self, key):
+    def get(self, key: str):
         cached_data = self.redis_client.get(key)
         if cached_data:
             return cached_data.decode("utf-8")
         return None
 
-    def set(self, key, value):
+    def set(self, key: str, value: Any):
         self.redis_client.set(key, value)
 
-    def cached_or_fetch(self, cache_key: str, repository_function, *args, **kwargs):
+    def cached_or_fetch(
+        self,
+        cache_key: str,
+        repository_function: Any,
+        *args: Any,
+        **kwargs: Any,
+    ):
         cached_result = self.get(cache_key)
         if cached_result:
             return json.loads(cached_result)

@@ -1,102 +1,79 @@
-from typing import Annotated
+import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Body, Depends, status
 
-from app import schemas
-from app.db.database import get_db
-from app.db.models import Dish
+from app.common.services.dish import DishService
+from app.schemas import CreateDishSchema, DishResponse, UpdateDishSchema
 
 router = APIRouter()
 
 
-@router.get("/{target_menu_id}/submenus/{target_submenu_id}/dishes")
-def get_dishes(db: Annotated[Session, Depends(get_db)]):
-    dishes = db.query(Dish).group_by(Dish.id).all()
-    dishes_response = []
-    for dish in dishes:
-        dishes_response.append(
-            {
-                "id": dish.id,
-                "title": dish.title,
-                "description": dish.description,
-                "price": dish.price,
-            },
-        )
-    return JSONResponse(content=jsonable_encoder(dishes_response))
+@router.get(
+    "/",
+    response_model=list[DishResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Возвращает список блюд",
+)
+def get_all_dishes_handler(target_submenu_id: uuid.UUID, dish: DishService = Depends()):
+    return dish.get_all(target_submenu_id)
 
 
 @router.get(
-    "/{target_menu_id}/submenus/{target_submenu_id}/dishes/{target_dish_id}",
-    response_model=schemas.DishResponse,
+    "/{target_dish_id}",
+    response_model=DishResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Возвращает определённое блюдо",
 )
-def get_dish(target_dish_id: str, db: Annotated[Session, Depends(get_db)]):
-    dish = db.query(Dish).filter(Dish.id == target_dish_id).first()
-    if not dish:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="dish not found",
-        )
-    return dish
+def get_dish_handler(
+    target_menu_id: uuid.UUID,
+    target_submenu_id: uuid.UUID,
+    target_dish_id: uuid.UUID,
+    dish: DishService = Depends(),
+):
+    return dish.get(target_menu_id, target_submenu_id, target_dish_id)
 
 
 @router.post(
-    "/{target_menu_id}/submenus/{target_submenu_id}/dishes",
+    "/",
+    response_model=DishResponse,
     status_code=status.HTTP_201_CREATED,
-    response_model=schemas.DishResponse,
+    summary="Создаёт блюдо",
 )
-def create_dish(
-    target_submenu_id: str,
-    dish: schemas.CreateDishSchema,
-    db: Annotated[Session, Depends(get_db)],
+def create_dish_handler(
+    target_menu_id: uuid.UUID,
+    target_submenu_id: uuid.UUID,
+    dish_data: CreateDishSchema,
+    dish: DishService = Depends(),
 ):
-    dish_add = Dish(
-        title=dish.title,
-        description=dish.description,
-        price=dish.price,
-        submenu_id=target_submenu_id,
-    )
-    # (title=dish.title, description=dish.description,
-    #             price=dish.price, submenu_id=target_submenu_id)
-    db.add(dish_add)
-    db.commit()
-    db.refresh(dish_add)
-    return dish_add
+    return dish.create(target_menu_id, target_submenu_id, dish_data)
 
 
 @router.patch(
-    "/{target_menu_id}/submenus/{target_submenu_id}/dishes/{target_dish_id}",
-    response_model=schemas.DishResponse,
+    "/{target_dish_id}",
+    response_model=DishResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Обновляет блюдо",
 )
-def update_dish(
-    target_dish_id: str,
-    dish: schemas.UpdateDishSchema,
-    db: Annotated[Session, Depends(get_db)],
+def update_dish_handler(
+    target_menu_id: uuid.UUID,
+    target_submenu_id: uuid.UUID,
+    target_dish_id: uuid.UUID,
+    dish_data: UpdateDishSchema = Body(...),
+    dish: DishService = Depends(),
 ):
-    dish_query = db.query(Dish).filter(Dish.id == target_dish_id)
-    updated_dish = dish_query.first()
-
-    if not updated_dish:
-        raise HTTPException(
-            status_code=status.HTTP_200_OK,
-            detail=f"No submenu with this id: {target_dish_id} found",
-        )
-    dish_query.update(dish.model_dump(exclude_unset=True), synchronize_session=False)
-    db.commit()
-    return updated_dish
+    return dish.update(target_menu_id, target_submenu_id, target_dish_id, dish_data)
 
 
-@router.delete("/{target_menu_id}/submenus/{target_submenu_id}/dishes/{target_dish_id}")
-def delete_dish(target_dish_id: str, db: Annotated[Session, Depends(get_db)]):
-    dish_query = db.query(Dish).filter(Dish.id == target_dish_id)
-    dish = dish_query.first()
-    if not dish:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No dish with this id: {target_dish_id} found",
-        )
-    dish_query.delete(synchronize_session=False)
-    db.commit()
-    return dish
+@router.delete(
+    "/{target_dish_id}",
+    response_model=DishResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Удаляет блюдо",
+)
+def delete_dish_handler(
+    target_menu_id: uuid.UUID,
+    target_submenu_id: uuid.UUID,
+    target_dish_id: uuid.UUID,
+    dish: DishService = Depends(),
+):
+    return dish.delete(target_menu_id, target_submenu_id, target_dish_id)
