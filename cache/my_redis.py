@@ -39,4 +39,4 @@ class Cache:
             self.redis_client.delete(cache_key)
 
 
-isinstance_cache = Cache("localhost")
+isinstance_cache = Cache("redis")

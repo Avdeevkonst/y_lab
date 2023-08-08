@@ -1,4 +1,5 @@
 import uuid
+from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, status
 
@@ -14,7 +15,9 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
     summary="Возвращает список блюд",
 )
-def get_all_dishes_handler(target_submenu_id: uuid.UUID, dish: DishService = Depends()):
+def get_all_dishes_handler(
+    target_submenu_id: uuid.UUID, dish: Annotated[DishService, Depends()]
+):
     return dish.get_all(target_submenu_id)
 
 
@@ -28,7 +31,7 @@ def get_dish_handler(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     target_dish_id: uuid.UUID,
-    dish: DishService = Depends(),
+    dish: Annotated[DishService, Depends()],
 ):
     return dish.get(target_menu_id, target_submenu_id, target_dish_id)
 
@@ -43,7 +46,7 @@ def create_dish_handler(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     dish_data: CreateDishSchema,
-    dish: DishService = Depends(),
+    dish: Annotated[DishService, Depends()],
 ):
     return dish.create(target_menu_id, target_submenu_id, dish_data)
 
@@ -58,8 +61,8 @@ def update_dish_handler(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     target_dish_id: uuid.UUID,
-    dish_data: UpdateDishSchema = Body(...),
-    dish: DishService = Depends(),
+    dish_data: Annotated[UpdateDishSchema, Body(...)],
+    dish: Annotated[DishService, Depends()],
 ):
     return dish.update(target_menu_id, target_submenu_id, target_dish_id, dish_data)
 
@@ -74,6 +77,6 @@ def delete_dish_handler(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     target_dish_id: uuid.UUID,
-    dish: DishService = Depends(),
+    dish: Annotated[DishService, Depends()],
 ):
     return dish.delete(target_menu_id, target_submenu_id, target_dish_id)

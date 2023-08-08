@@ -67,5 +67,6 @@ class SubMenuService:
             "all_submenus",
             "all_menus",
             f"submenu_{target_submenu_id}",
+            f"menu_{target_menu_id}",
         )
         return item

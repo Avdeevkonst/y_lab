@@ -48,7 +48,6 @@ class UpdateSubmenuSchema(UpdateMenuSchema):
 
 class FilteredSubmenuResponse(SubmenuBaseSchema):
     id: uuid.UUID
-    # submenus_count: int | None
     dishes_count: int | None
 
 

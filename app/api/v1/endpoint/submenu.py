@@ -1,4 +1,5 @@
 import uuid
+from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, status
 
@@ -19,7 +20,9 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
     summary="Возвращает список подменю",
 )
-def get_submenus(target_menu_id: uuid.UUID, submenu: SubMenuService = Depends()):
+def get_submenus(
+    target_menu_id: uuid.UUID, submenu: Annotated[SubMenuService, Depends()]
+):
     return submenu.get_all(target_menu_id)
 
 
@@ -32,7 +35,7 @@ def get_submenus(target_menu_id: uuid.UUID, submenu: SubMenuService = Depends())
 def get_submenu(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
-    submenu: SubMenuService = Depends(),
+    submenu: Annotated[SubMenuService, Depends()],
 ):
     return submenu.get(target_menu_id, target_submenu_id)
 
@@ -46,7 +49,7 @@ def get_submenu(
 def create_submenu(
     target_menu_id: uuid.UUID,
     submenu_data: CreateSubmenuSchema,
-    submenu: SubMenuService = Depends(),
+    submenu: Annotated[SubMenuService, Depends()],
 ):
     return submenu.create(target_menu_id, submenu_data)
 
@@ -60,8 +63,8 @@ def create_submenu(
 def update_submenu(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
-    submenu_data: UpdateSubmenuSchema = Body(...),
-    submenu: SubMenuService = Depends(),
+    submenu_data: Annotated[UpdateSubmenuSchema, Body(...)],
+    submenu: Annotated[SubMenuService, Depends()],
 ):
     return submenu.update(target_menu_id, target_submenu_id, submenu_data)
 
@@ -75,6 +78,6 @@ def update_submenu(
 def delete_submenu(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
-    submenu: SubMenuService = Depends(),
+    submenu: Annotated[SubMenuService, Depends()],
 ):
     return submenu.delete(target_menu_id, target_submenu_id)

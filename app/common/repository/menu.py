@@ -64,13 +64,12 @@ class MenuRepository:
             .filter(Submenu.menu_id == target_menu_id)
             .count()
         )
-        # breakpoint()
         return GetAllMenu(
             id=menu.id,
             title=menu.title,
             description=menu.description,
-            submenus_count=str(submenus_count),
-            dishes_count=str(dishes_count),
+            submenus_count=submenus_count,
+            dishes_count=dishes_count,
         )
 
     def create(self, menu: CreateMenuSchema) -> Menu:
