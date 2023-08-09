@@ -20,11 +20,11 @@ class Cache:
         self.redis_client.set(key, value)
 
     def cached_or_fetch(
-        self,
-        cache_key: str,
-        repository_function: Any,
-        *args: Any,
-        **kwargs: Any,
+            self,
+            cache_key: str,
+            repository_function: Any,
+            *args: Any,
+            **kwargs: Any,
     ):
         cached_result = self.get(cache_key)
         if cached_result:
@@ -40,4 +40,5 @@ class Cache:
             self.redis_client.delete(cache_key)
 
 
-isinstance_cache = Cache(str(os.getenv("REDIS_HOST")))
+REDIS_HOST: str = str(os.getenv("REDIS_HOST"))
+isinstance_cache = Cache(REDIS_HOST)
