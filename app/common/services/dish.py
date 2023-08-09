@@ -48,7 +48,14 @@ class DishService:
         dish_data: CreateDishSchema,
     ) -> Dish:
         item = self.repository.create(target_menu_id, target_submenu_id, dish_data)
-        self.cache.invalidate("all_dishes")
+        self.cache.invalidate(
+            "all_dishes",
+            f"menu_{target_menu_id}",
+            f"submenu_{target_submenu_id}",
+            "all_menus",
+            "all_submenus",
+        )
+
         return item
 
     def update(

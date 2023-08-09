@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Any
 
 import redis
@@ -39,4 +40,4 @@ class Cache:
             self.redis_client.delete(cache_key)
 
 
-isinstance_cache = Cache("redis")
+isinstance_cache = Cache(str(os.getenv("REDIS_HOST")))
