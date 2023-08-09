@@ -16,7 +16,8 @@ router = APIRouter()
     summary="Возвращает список блюд",
 )
 def get_all_dishes_handler(
-    target_submenu_id: uuid.UUID, dish: Annotated[DishService, Depends()]
+    target_submenu_id: uuid.UUID,
+    dish: Annotated[DishService, Depends()],
 ):
     return dish.get_all(target_submenu_id)
 

@@ -62,14 +62,7 @@ class DishRepository:
         target_submenu_id: uuid.UUID,
         target_dish_id: uuid.UUID,
     ) -> Dish:
-        dish = (
-            self.session.query(Dish)
-            .join(Submenu, Submenu.id == Dish.submenu_id)
-            .filter(Submenu.menu_id == target_menu_id)
-            .filter(Dish.submenu_id == target_submenu_id)
-            .filter(Dish.id == target_dish_id)
-            .first()
-        )
+        dish = self.search_dish(target_menu_id, target_submenu_id, target_dish_id)
         if not dish:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -85,14 +78,7 @@ class DishRepository:
         target_dish_id: uuid.UUID,
         dish_data: DishBaseSchema,
     ) -> Submenu:
-        dish = (
-            self.session.query(Dish)
-            .join(Submenu, Submenu.id == Dish.submenu_id)
-            .filter(Submenu.menu_id == target_menu_id)
-            .filter(Dish.submenu_id == target_submenu_id)
-            .filter(Dish.id == target_dish_id)
-            .first()
-        )
+        dish = self.search_dish(target_menu_id, target_submenu_id, target_dish_id)
         if not dish:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -113,14 +99,7 @@ class DishRepository:
         target_submenu_id: uuid.UUID,
         target_dish_id: uuid.UUID,
     ) -> JSONResponse:
-        dish = (
-            self.session.query(Dish)
-            .join(Submenu, Submenu.id == Dish.submenu_id)
-            .filter(Submenu.menu_id == target_menu_id)
-            .filter(Dish.submenu_id == target_submenu_id)
-            .filter(Dish.id == target_dish_id)
-            .first()
-        )
+        dish = self.search_dish(target_menu_id, target_submenu_id, target_dish_id)
         if not dish:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -132,4 +111,19 @@ class DishRepository:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"message": f"Dish {dish.title} deleted successfully"},
+        )
+
+    def search_dish(
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        target_dish_id: uuid.UUID,
+    ):
+        return (
+            self.session.query(Dish)
+            .join(Submenu, Submenu.id == Dish.submenu_id)
+            .filter(Submenu.menu_id == target_menu_id)
+            .filter(Dish.submenu_id == target_submenu_id)
+            .filter(Dish.id == target_dish_id)
+            .first()
         )

@@ -21,7 +21,8 @@ router = APIRouter()
     summary="Возвращает список подменю",
 )
 def get_submenus(
-    target_menu_id: uuid.UUID, submenu: Annotated[SubMenuService, Depends()]
+    target_menu_id: uuid.UUID,
+    submenu: Annotated[SubMenuService, Depends()],
 ):
     return submenu.get_all(target_menu_id)
 
