@@ -15,11 +15,11 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
     summary="Возвращает список блюд",
 )
-def get_all_dishes_handler(
+async def get_all_dishes_handler(
     target_submenu_id: uuid.UUID,
     dish: Annotated[DishService, Depends()],
 ):
-    return dish.get_all(target_submenu_id)
+    return await dish.get_all(target_submenu_id)
 
 
 @router.get(
@@ -28,13 +28,13 @@ def get_all_dishes_handler(
     status_code=status.HTTP_200_OK,
     summary="Возвращает определённое блюдо",
 )
-def get_dish_handler(
+async def get_dish_handler(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     target_dish_id: uuid.UUID,
     dish: Annotated[DishService, Depends()],
 ):
-    return dish.get(target_menu_id, target_submenu_id, target_dish_id)
+    return await dish.get(target_menu_id, target_submenu_id, target_dish_id)
 
 
 @router.post(
@@ -43,13 +43,13 @@ def get_dish_handler(
     status_code=status.HTTP_201_CREATED,
     summary="Создаёт блюдо",
 )
-def create_dish_handler(
+async def create_dish_handler(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     dish_data: CreateDishSchema,
     dish: Annotated[DishService, Depends()],
 ):
-    return dish.create(target_menu_id, target_submenu_id, dish_data)
+    return await dish.create(target_menu_id, target_submenu_id, dish_data)
 
 
 @router.patch(
@@ -58,14 +58,14 @@ def create_dish_handler(
     status_code=status.HTTP_200_OK,
     summary="Обновляет блюдо",
 )
-def update_dish_handler(
+async def update_dish_handler(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     target_dish_id: uuid.UUID,
     dish_data: Annotated[UpdateDishSchema, Body(...)],
     dish: Annotated[DishService, Depends()],
 ):
-    return dish.update(target_menu_id, target_submenu_id, target_dish_id, dish_data)
+    return await dish.update(target_menu_id, target_submenu_id, target_dish_id, dish_data)
 
 
 @router.delete(
@@ -74,10 +74,10 @@ def update_dish_handler(
     status_code=status.HTTP_200_OK,
     summary="Удаляет блюдо",
 )
-def delete_dish_handler(
+async def delete_dish_handler(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     target_dish_id: uuid.UUID,
     dish: Annotated[DishService, Depends()],
 ):
-    return dish.delete(target_menu_id, target_submenu_id, target_dish_id)
+    return await dish.delete(target_menu_id, target_submenu_id, target_dish_id)

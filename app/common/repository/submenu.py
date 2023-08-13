@@ -22,15 +22,15 @@ class SubMenuRepository:
         self.session: Session = session
         self.model = Submenu
 
-    def get_all(self, target_menu_id: uuid.UUID) -> list[SubmenuResponse]:
+    async def get_all(self, target_menu_id: uuid.UUID) -> list[SubmenuResponse]:
         submenus = (
-            self.session.query(Submenu).filter(Submenu.menu_id == target_menu_id).all()
+            await self.session.query(Submenu).filter(Submenu.menu_id == target_menu_id).all()
         )
         submenu_responses = []
 
         for submenu in submenus:
             dishes_count = (
-                self.session.query(func.count(Dish.id))
+                await self.session.query(func.count(Dish.id))
                 .filter(Dish.submenu_id == submenu.id)
                 .scalar()
             )
@@ -47,12 +47,12 @@ class SubMenuRepository:
 
         return submenu_responses
 
-    def create(
-        self,
-        target_menu_id: uuid.UUID,
-        submenu_data: CreateSubmenuSchema,
+    async def create(
+            self,
+            target_menu_id: uuid.UUID,
+            submenu_data: CreateSubmenuSchema,
     ) -> Submenu:
-        menu = self.session.query(Menu).filter(Menu.id == target_menu_id).first()
+        menu = await self.session.query(Menu).filter(Menu.id == target_menu_id).first()
 
         if not menu:
             raise HTTPException(
@@ -62,17 +62,17 @@ class SubMenuRepository:
 
         new_submenu = Submenu(**submenu_data.model_dump(), menu_id=target_menu_id)
         self.session.add(new_submenu)
-        self.session.commit()
-        self.session.refresh(new_submenu)
+        await self.session.commit()
+        await self.session.refresh(new_submenu)
         return new_submenu
 
-    def get(
-        self,
-        target_menu_id: uuid.UUID,
-        target_submenu_id: uuid.UUID,
+    async def get(
+            self,
+            target_menu_id: uuid.UUID,
+            target_submenu_id: uuid.UUID,
     ) -> FilteredSubmenuResponse:
         submenu = (
-            self.session.query(Submenu)
+            await self.session.query(Submenu)
             .filter(Submenu.id == target_submenu_id, Submenu.menu_id == target_menu_id)
             .first()
         )
@@ -83,7 +83,7 @@ class SubMenuRepository:
             )
 
         dishes_count = (
-            self.session.query(func.count(Dish.id))
+            await self.session.query(func.count(Dish.id))
             .filter(Dish.submenu_id == target_submenu_id)
             .scalar()
         )
@@ -96,14 +96,14 @@ class SubMenuRepository:
             dishes_count=dishes_count,
         )
 
-    def update(
-        self,
-        target_menu_id: uuid.UUID,
-        target_submenu_id: uuid.UUID,
-        submenu_data: UpdateSubmenuSchema,
+    async def update(
+            self,
+            target_menu_id: uuid.UUID,
+            target_submenu_id: uuid.UUID,
+            submenu_data: UpdateSubmenuSchema,
     ) -> type[Submenu]:
         submenu = (
-            self.session.query(Submenu)
+            await self.session.query(Submenu)
             .filter(Submenu.id == target_submenu_id, Submenu.menu_id == target_menu_id)
             .first()
         )
@@ -115,17 +115,17 @@ class SubMenuRepository:
 
         submenu.title = submenu_data.title
         submenu.description = submenu_data.description
-        self.session.commit()
-        self.session.refresh(submenu)
+        await self.session.commit()
+        await self.session.refresh(submenu)
         return submenu
 
-    def delete(
-        self,
-        target_menu_id: uuid.UUID,
-        target_submenu_id: uuid.UUID,
+    async def delete(
+            self,
+            target_menu_id: uuid.UUID,
+            target_submenu_id: uuid.UUID,
     ) -> JSONResponse:
         submenu = (
-            self.session.query(Submenu)
+            await self.session.query(Submenu)
             .filter(Submenu.id == target_submenu_id, Submenu.menu_id == target_menu_id)
             .first()
         )
@@ -136,8 +136,8 @@ class SubMenuRepository:
                 detail="submenu not found",
             )
 
-        self.session.delete(submenu)
-        self.session.commit()
+        await self.session.delete(submenu)
+        await self.session.commit()
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"message": f"Submenu {submenu.title} deleted successfully"},

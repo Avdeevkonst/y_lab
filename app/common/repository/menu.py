@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.responses import JSONResponse
@@ -17,8 +18,8 @@ class MenuRepository:
         self.model = Menu
 
     # Функция для подсчета количества подменю и блюд, и выдачи списка меню
-    def get_all(self) -> list[GetAllMenu]:
-        menus = self.session.query(self.model).all()
+    async def get_all(self) -> list[GetAllMenu]:
+        menus = await self.session.query(self.model).all()
         list_menu_responses = []
         for menu in menus:
             submenus_count = (
@@ -40,9 +41,9 @@ class MenuRepository:
             list_menu_responses.append(menu_response)
         return list_menu_responses
 
-    def get(self, target_menu_id: uuid.UUID) -> GetAllMenu:
+    async def get(self, target_menu_id: uuid.UUID) -> GetAllMenu:
         menu = (
-            self.session.query(self.model)
+            await self.session.query(self.model)
             .filter(self.model.id == target_menu_id)
             .first()
         )
@@ -54,12 +55,12 @@ class MenuRepository:
             )
 
         submenus_count = (
-            self.session.query(Submenu)
+            await self.session.query(Submenu)
             .filter(Submenu.menu_id == target_menu_id)
             .count()
         )
         dishes_count = (
-            self.session.query(Dish)
+            await self.session.query(Dish)
             .join(Submenu)
             .filter(Submenu.menu_id == target_menu_id)
             .count()
@@ -72,24 +73,21 @@ class MenuRepository:
             dishes_count=dishes_count,
         )
 
-    def create(self, menu: CreateMenuSchema) -> Menu:
+    async def create(self, menu: CreateMenuSchema) -> Menu:
         new_menu = self.model(**menu.model_dump())
         self.session.add(new_menu)
-        self.session.commit()
-        self.session.refresh(new_menu)
+        await self.session.commit()
+        await self.session.refresh(new_menu)
         return new_menu
 
-    def update(
+    async def update(
         self,
         target_menu_id: uuid.UUID,
         menu_data: UpdateMenuSchema,
     ) -> type[Menu]:
-        menu = (
-            self.session.query(self.model)
-            .filter(self.model.id == target_menu_id)
-            .first()
-        )
-
+        stmt = select(self.model).where(self.model.id == target_menu_id)
+        result = await self.session.execute(stmt)
+        menu = result.scalars().first()
         if not menu:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -98,13 +96,25 @@ class MenuRepository:
 
         menu.title = menu_data.title
         menu.description = menu_data.description
-        self.session.commit()
-        self.session.refresh(menu)
+        await self.session.commit()
+        await self.session.refresh(menu)
         return menu
 
-    def delete(self, target_menu_id: uuid.UUID) -> JSONResponse:
+        # if not menu:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_404_NOT_FOUND,
+        #         detail="menu not found",
+        #     )
+        #
+        # menu.title = menu_data.title
+        # menu.description = menu_data.description
+        # await self.session.commit()
+        # await self.session.refresh(menu)
+        # return menu
+
+    async def delete(self, target_menu_id: uuid.UUID) -> JSONResponse:
         menu = (
-            self.session.query(self.model)
+            await self.session.query(self.model)
             .filter(self.model.id == target_menu_id)
             .first()
         )
@@ -116,8 +126,8 @@ class MenuRepository:
             )
 
         menu_title = menu.title
-        self.session.delete(menu)
-        self.session.commit()
+        await self.session.delete(menu)
+        await self.session.commit()
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={"message": f"Menu {menu_title} deleted successfully"},

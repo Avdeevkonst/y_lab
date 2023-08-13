@@ -20,20 +20,20 @@ class DishService:
         self.repository = repository
         self.cache = isinstance_cache
 
-    def get_all(self, target_submenu_id: uuid.UUID) -> list[type[Dish]]:
-        return self.cache.cached_or_fetch(
+    async def get_all(self, target_submenu_id: uuid.UUID) -> list[type[Dish]]:
+        return await self.cache.cached_or_fetch(
             "all_dishes",
             self.repository.get_all,
             target_submenu_id,
         )
 
-    def get(
+    async def get(
         self,
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
         target_dish_id: uuid.UUID,
     ) -> Submenu:
-        return self.cache.cached_or_fetch(
+        return await self.cache.cached_or_fetch(
             f"dish_{target_dish_id}",
             self.repository.get,
             target_menu_id,
@@ -41,14 +41,14 @@ class DishService:
             target_dish_id,
         )
 
-    def create(
+    async def create(
         self,
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
         dish_data: CreateDishSchema,
     ) -> Dish:
-        item = self.repository.create(target_menu_id, target_submenu_id, dish_data)
-        self.cache.invalidate(
+        item = await self.repository.create(target_menu_id, target_submenu_id, dish_data)
+        await self.cache.invalidate(
             "all_dishes",
             f"menu_{target_menu_id}",
             f"submenu_{target_submenu_id}",
@@ -58,30 +58,30 @@ class DishService:
 
         return item
 
-    def update(
+    async def update(
         self,
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
         target_dish_id: uuid.UUID,
         dish_data: UpdateDishSchema,
     ) -> Submenu:
-        item = self.repository.update(
+        item = await self.repository.update(
             target_menu_id,
             target_submenu_id,
             target_dish_id,
             dish_data,
         )
-        self.cache.invalidate("all_dishes", f"dish_{target_dish_id}")
+        await self.cache.invalidate("all_dishes", f"dish_{target_dish_id}")
         return item
 
-    def delete(
+    async def delete(
         self,
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
         target_dish_id: uuid.UUID,
     ) -> JSONResponse:
-        item = self.repository.delete(target_menu_id, target_submenu_id, target_dish_id)
-        self.cache.invalidate(
+        item = await self.repository.delete(target_menu_id, target_submenu_id, target_dish_id)
+        await self.cache.invalidate(
             "all_dishes",
             "all_submenus",
             "all_menus",

@@ -20,11 +20,11 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
     summary="Возвращает список подменю",
 )
-def get_submenus(
+async def get_submenus(
     target_menu_id: uuid.UUID,
     submenu: Annotated[SubMenuService, Depends()],
 ):
-    return submenu.get_all(target_menu_id)
+    return await submenu.get_all(target_menu_id)
 
 
 @router.get(
@@ -33,12 +33,12 @@ def get_submenus(
     status_code=status.HTTP_200_OK,
     summary="Возвращает определённое подменю",
 )
-def get_submenu(
+async def get_submenu(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     submenu: Annotated[SubMenuService, Depends()],
 ):
-    return submenu.get(target_menu_id, target_submenu_id)
+    return await submenu.get(target_menu_id, target_submenu_id)
 
 
 @router.post(
@@ -47,12 +47,12 @@ def get_submenu(
     status_code=status.HTTP_201_CREATED,
     summary="Создаёт подменю",
 )
-def create_submenu(
+async def create_submenu(
     target_menu_id: uuid.UUID,
     submenu_data: CreateSubmenuSchema,
     submenu: Annotated[SubMenuService, Depends()],
 ):
-    return submenu.create(target_menu_id, submenu_data)
+    return await submenu.create(target_menu_id, submenu_data)
 
 
 @router.patch(
@@ -61,13 +61,13 @@ def create_submenu(
     status_code=status.HTTP_200_OK,
     summary="Обновляет подменю",
 )
-def update_submenu(
+async def update_submenu(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     submenu_data: Annotated[UpdateSubmenuSchema, Body(...)],
-    submenu: Annotated[SubMenuService, Depends()],
+    submenu: Annotated[SubMenuService, Depends()], Submenu
 ):
-    return submenu.update(target_menu_id, target_submenu_id, submenu_data)
+    return await submenu.update(target_menu_id, target_submenu_id, submenu_data)
 
 
 @router.delete(
@@ -76,9 +76,9 @@ def update_submenu(
     status_code=status.HTTP_200_OK,
     summary="Удаляет подменю",
 )
-def delete_submenu(
+async def delete_submenu(
     target_menu_id: uuid.UUID,
     target_submenu_id: uuid.UUID,
     submenu: Annotated[SubMenuService, Depends()],
 ):
-    return submenu.delete(target_menu_id, target_submenu_id)
+    return await submenu.delete(target_menu_id, target_submenu_id)
