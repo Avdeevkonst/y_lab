@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import BackgroundTasks, Depends
 from starlette.responses import JSONResponse
 
 from app.common.repository.dish import DishRepository
@@ -46,14 +46,20 @@ class DishService:
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
         dish_data: CreateDishSchema,
+        background_tasks: BackgroundTasks,
     ) -> Dish:
-        item = await self.repository.create(target_menu_id, target_submenu_id, dish_data)
-        await self.cache.invalidate(
-            "all_dishes",
-            f"menu_{target_menu_id}",
-            f"submenu_{target_submenu_id}",
-            "all_menus",
-            "all_submenus",
+        item = await self.repository.create(
+            target_menu_id, target_submenu_id, dish_data,
+        )
+        background_tasks.add_task(
+            self.cache.invalidate(
+                "all_dishes",
+                f"menu_{target_menu_id}",
+                f"submenu_{target_submenu_id}",
+                "all_menus",
+                "all_submenus",
+                "all_data",
+            ),
         )
 
         return item
@@ -64,6 +70,7 @@ class DishService:
         target_submenu_id: uuid.UUID,
         target_dish_id: uuid.UUID,
         dish_data: UpdateDishSchema,
+        background_tasks: BackgroundTasks,
     ) -> Submenu:
         item = await self.repository.update(
             target_menu_id,
@@ -71,7 +78,9 @@ class DishService:
             target_dish_id,
             dish_data,
         )
-        await self.cache.invalidate("all_dishes", f"dish_{target_dish_id}")
+        background_tasks.add_task(
+            self.cache.invalidate("all_dishes", f"dish_{target_dish_id}", "all_data"),
+        )
         return item
 
     async def delete(
@@ -79,14 +88,20 @@ class DishService:
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
         target_dish_id: uuid.UUID,
+        background_tasks: BackgroundTasks,
     ) -> JSONResponse:
-        item = await self.repository.delete(target_menu_id, target_submenu_id, target_dish_id)
-        await self.cache.invalidate(
-            "all_dishes",
-            "all_submenus",
-            "all_menus",
-            f"dish_{target_dish_id}",
-            f"menu_{target_menu_id}",
-            f"submenu_{target_submenu_id}",
+        item = await self.repository.delete(
+            target_menu_id, target_submenu_id, target_dish_id,
+        )
+        background_tasks.add_task(
+            self.cache.invalidate(
+                "all_dishes",
+                "all_submenus",
+                "all_menus",
+                f"dish_{target_dish_id}",
+                f"menu_{target_menu_id}",
+                f"submenu_{target_submenu_id}",
+                "all_data",
+            ),
         )
         return item

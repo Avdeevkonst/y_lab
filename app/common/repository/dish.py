@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.responses import JSONResponse
@@ -18,24 +19,26 @@ class DishRepository:
 
     # Возвращает все блюда для определенного подменю
     async def get_all(self, target_submenu_id: uuid.UUID) -> list[type[Dish]]:
-        return (
-            await self.session.query(Dish).filter(Dish.submenu_id == target_submenu_id).all()
-        )
+        stmt_dish = select(self.model).where(self.model.submenu_id == target_submenu_id)
+        result_dish = await self.session.execute(stmt_dish)
+        return result_dish.scalars().fetchall()
 
     # Создаёт блюдо для указанного подменю
     async def create(
-            self,
-            target_menu_id: uuid.UUID,
-            target_submenu_id: uuid.UUID,
-            dish_data: CreateDishSchema,
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        dish_data: CreateDishSchema,
     ) -> Dish:
         # Проверяем, существуют ли указанные меню и подменю
-        menu = await self.session.query(Menu).filter(Menu.id == target_menu_id).first()
-        submenu = (
-            await self.session.query(Submenu)
-            .filter(Submenu.id == target_submenu_id, Submenu.menu_id == target_menu_id)
-            .first()
+        stmt_dish = select(Menu).where(Menu.id == target_menu_id)
+        result_dish = await self.session.execute(stmt_dish)
+        menu = result_dish.scalars().first()
+        stmt_submenu = select(Submenu).where(
+            Submenu.menu_id == target_menu_id, Submenu.id == target_submenu_id,
         )
+        result_submenu = await self.session.execute(stmt_submenu)
+        submenu = result_submenu.scalars().first()
 
         if not menu:
             raise HTTPException(
@@ -57,10 +60,10 @@ class DishRepository:
 
     # Возвращает блюдо по ero ID и принадлежности к указанному меню и подменю
     async def get(
-            self,
-            target_menu_id: uuid.UUID,
-            target_submenu_id: uuid.UUID,
-            target_dish_id: uuid.UUID,
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        target_dish_id: uuid.UUID,
     ) -> Dish:
         dish = await self.search_dish(target_menu_id, target_submenu_id, target_dish_id)
         if not dish:
@@ -72,11 +75,11 @@ class DishRepository:
 
     # Обновляет блюдо по ero ID и принадлежности к указанному меню и подменю
     async def update(
-            self,
-            target_menu_id: uuid.UUID,
-            target_submenu_id: uuid.UUID,
-            target_dish_id: uuid.UUID,
-            dish_data: DishBaseSchema,
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        target_dish_id: uuid.UUID,
+        dish_data: DishBaseSchema,
     ) -> Submenu:
         dish = await self.search_dish(target_menu_id, target_submenu_id, target_dish_id)
         if not dish:
@@ -94,10 +97,10 @@ class DishRepository:
 
     # Удаляет блюдо по ero ID и принадлежности к указанному меню и подменю
     async def delete(
-            self,
-            target_menu_id: uuid.UUID,
-            target_submenu_id: uuid.UUID,
-            target_dish_id: uuid.UUID,
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        target_dish_id: uuid.UUID,
     ) -> JSONResponse:
         dish = await self.search_dish(target_menu_id, target_submenu_id, target_dish_id)
         if not dish:
@@ -114,17 +117,15 @@ class DishRepository:
         )
 
     async def search_dish(
-            self,
-            target_menu_id: uuid.UUID,
-            target_submenu_id: uuid.UUID,
-            target_dish_id: uuid.UUID,
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        target_dish_id: uuid.UUID,
     ):
-
-        return (
-            await self.session.query(Dish)
-            .join(Submenu, Submenu.id == Dish.submenu_id)
-            .filter(Submenu.menu_id == target_menu_id)
-            .filter(Dish.submenu_id == target_submenu_id)
-            .filter(Dish.id == target_dish_id)
-            .first()
+        stmt = select(Dish).where(
+            Submenu.menu_id == target_menu_id,
+            Dish.submenu_id == target_submenu_id,
+            Dish.id == target_dish_id,
         )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()

@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import BackgroundTasks, Depends
 from starlette.responses import JSONResponse
 
 from app.common.repository.menu import MenuRepository
@@ -25,21 +25,30 @@ class MenuService:
             target_menu_id,
         )
 
-    async def create(self, menu: CreateMenuSchema) -> Menu:
+    async def create(
+        self, menu: CreateMenuSchema, background_tasks: BackgroundTasks,
+    ) -> Menu:
         item = await self.repository.create(menu)
-        await self.cache.invalidate("all_menus")
+        background_tasks.add_task(self.cache.invalidate("all_menus", "all_data"))
         return item
 
     async def update(
         self,
         target_menu_id: uuid.UUID,
         menu_data: UpdateMenuSchema,
+        background_tasks: BackgroundTasks,
     ) -> type[Menu]:
         item = await self.repository.update(target_menu_id, menu_data)
-        await self.cache.invalidate("all_menus", f"menu_{target_menu_id}")
+        background_tasks.add_task(
+            self.cache.invalidate("all_menus", f"menu_{target_menu_id}", "all_data"),
+        )
         return item
 
-    async def delete(self, target_menu_id: uuid.UUID) -> JSONResponse:
+    async def delete(
+        self, target_menu_id: uuid.UUID, background_tasks: BackgroundTasks,
+    ) -> JSONResponse:
         item = await self.repository.delete(target_menu_id)
-        await self.cache.invalidate("all_menus", f"menu_{target_menu_id}")
+        background_tasks.add_task(
+            self.cache.invalidate("all_menus", f"menu_{target_menu_id}", "all_data"),
+        )
         return item

@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, status
 
 from app.common.services.submenu import SubMenuService
 from app.schemas import (
@@ -21,8 +21,8 @@ router = APIRouter()
     summary="Возвращает список подменю",
 )
 async def get_submenus(
-    target_menu_id: uuid.UUID,
-    submenu: Annotated[SubMenuService, Depends()],
+        target_menu_id: uuid.UUID,
+        submenu: Annotated[SubMenuService, Depends()],
 ):
     return await submenu.get_all(target_menu_id)
 
@@ -34,9 +34,9 @@ async def get_submenus(
     summary="Возвращает определённое подменю",
 )
 async def get_submenu(
-    target_menu_id: uuid.UUID,
-    target_submenu_id: uuid.UUID,
-    submenu: Annotated[SubMenuService, Depends()],
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        submenu: Annotated[SubMenuService, Depends()],
 ):
     return await submenu.get(target_menu_id, target_submenu_id)
 
@@ -48,11 +48,12 @@ async def get_submenu(
     summary="Создаёт подменю",
 )
 async def create_submenu(
-    target_menu_id: uuid.UUID,
-    submenu_data: CreateSubmenuSchema,
-    submenu: Annotated[SubMenuService, Depends()],
+        target_menu_id: uuid.UUID,
+        submenu_data: CreateSubmenuSchema,
+        submenu: Annotated[SubMenuService, Depends()],
+        background_tasks: BackgroundTasks,
 ):
-    return await submenu.create(target_menu_id, submenu_data)
+    return await submenu.create(target_menu_id, submenu_data, background_tasks)
 
 
 @router.patch(
@@ -62,12 +63,13 @@ async def create_submenu(
     summary="Обновляет подменю",
 )
 async def update_submenu(
-    target_menu_id: uuid.UUID,
-    target_submenu_id: uuid.UUID,
-    submenu_data: Annotated[UpdateSubmenuSchema, Body(...)],
-    submenu: Annotated[SubMenuService, Depends()], Submenu
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        submenu_data: Annotated[UpdateSubmenuSchema, Body(...)],
+        submenu: Annotated[SubMenuService, Depends()],
+        background_tasks: BackgroundTasks,
 ):
-    return await submenu.update(target_menu_id, target_submenu_id, submenu_data)
+    return await submenu.update(target_menu_id, target_submenu_id, submenu_data, background_tasks)
 
 
 @router.delete(
@@ -77,8 +79,9 @@ async def update_submenu(
     summary="Удаляет подменю",
 )
 async def delete_submenu(
-    target_menu_id: uuid.UUID,
-    target_submenu_id: uuid.UUID,
-    submenu: Annotated[SubMenuService, Depends()],
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        submenu: Annotated[SubMenuService, Depends()],
+        background_tasks: BackgroundTasks,
 ):
-    return await submenu.delete(target_menu_id, target_submenu_id)
+    return await submenu.delete(target_menu_id, target_submenu_id, background_tasks)

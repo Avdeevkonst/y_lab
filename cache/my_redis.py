@@ -20,17 +20,17 @@ class Cache:
         await self.redis_client.set(key, value)
 
     async def cached_or_fetch(
-            self,
-            cache_key: str,
-            repository_function: Any,
-            *args: Any,
-            **kwargs: Any,
+        self,
+        cache_key: str,
+        repository_function: Any,
+        *args: Any,
+        **kwargs: Any,
     ):
         cached_result = await self.get(cache_key)
         if cached_result:
             return json.loads(cached_result)
 
-        items = repository_function(*args, **kwargs)
+        items = await repository_function(*args, **kwargs)
         json_compatible_value = jsonable_encoder(items)
         await self.set(cache_key, json.dumps(json_compatible_value))
         return items

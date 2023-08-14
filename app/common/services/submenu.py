@@ -1,7 +1,7 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import BackgroundTasks, Depends
 from starlette.responses import JSONResponse
 
 from app.common.repository.submenu import SubMenuRepository
@@ -43,11 +43,15 @@ class SubMenuService:
         self,
         target_menu_id: uuid.UUID,
         submenu: CreateSubmenuSchema,
+        background_tasks: BackgroundTasks,
     ) -> Submenu:
-        await self.cache.invalidate(
-            f"menu_{target_menu_id}",
-            "all_submenus",
-            "all_menus",
+        background_tasks.add_task(
+            self.cache.invalidate(
+                f"menu_{target_menu_id}",
+                "all_submenus",
+                "all_menus",
+                "all_data",
+            ),
         )
         return await self.repository.create(target_menu_id, submenu)
 
@@ -56,21 +60,32 @@ class SubMenuService:
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
         submenu_data: UpdateSubmenuSchema,
+        background_tasks: BackgroundTasks,
     ) -> type[Submenu]:
-        item = await self.repository.update(target_menu_id, target_submenu_id, submenu_data)
-        await self.cache.invalidate("all_submenus", f"submenu_{target_submenu_id}")
+        item = await self.repository.update(
+            target_menu_id, target_submenu_id, submenu_data,
+        )
+        background_tasks.add_task(
+            self.cache.invalidate(
+                "all_submenus", f"submenu_{target_submenu_id}", "all_data",
+            ),
+        )
         return item
 
     async def delete(
         self,
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
+        background_tasks: BackgroundTasks,
     ) -> JSONResponse:
         item = await self.repository.delete(target_menu_id, target_submenu_id)
-        await self.cache.invalidate(
-            "all_submenus",
-            "all_menus",
-            f"submenu_{target_submenu_id}",
-            f"menu_{target_menu_id}",
+        background_tasks.add_task(
+            self.cache.invalidate(
+                "all_submenus",
+                "all_menus",
+                f"submenu_{target_submenu_id}",
+                f"menu_{target_menu_id}",
+                "all_data",
+            ),
         )
         return item

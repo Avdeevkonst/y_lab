@@ -4,7 +4,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio
 
-from app.api.v1.endpoint import dish, menu, submenu
+from app.api.v1.endpoint import data, dish, menu, submenu
 from app.db.database import CLIENT_ORIGIN
 
 app = FastAPI(title="Y_lab", docs_url="/")
@@ -35,6 +35,11 @@ app.include_router(
     dish.router,
     prefix="/api/v1/menus/{target_menu_id}/submenus/{target_submenu_id}/dishes",
     tags=["dishes"],
+)
+app.include_router(
+    data.router,
+    prefix="/api/v1/get-linked-list",
+    tags=["collected information"],
 )
 
 

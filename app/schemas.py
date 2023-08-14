@@ -65,7 +65,37 @@ class CreateDishSchema(DishBaseSchema):
 
 class DishResponse(DishBaseSchema):
     id: uuid.UUID
+    submenu_id: uuid.UUID
 
 
 class UpdateDishSchema(DishBaseSchema):
     pass
+
+
+class NestedDataDish(BaseModel):
+    id: uuid.UUID | str
+    title: str
+    description: str
+    price: str
+    submenu_id: uuid.UUID | str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NestedDataSubmenu(BaseModel):
+    id: uuid.UUID | str
+    title: str
+    description: str
+    menu_id: uuid.UUID | str
+    dish: list[NestedDataDish]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class NestedDataMenu(BaseModel):
+    id: uuid.UUID | str
+    title: str
+    description: str
+    submenu: list[NestedDataSubmenu]
+
+    model_config = ConfigDict(from_attributes=True)

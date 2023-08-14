@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.responses import JSONResponse
@@ -23,43 +23,39 @@ class SubMenuRepository:
         self.model = Submenu
 
     async def get_all(self, target_menu_id: uuid.UUID) -> list[SubmenuResponse]:
-        submenus = (
-            await self.session.query(Submenu).filter(Submenu.menu_id == target_menu_id).all()
-        )
+        stmt = select(Submenu).where(Submenu.menu_id == target_menu_id)
+        result = await self.session.execute(stmt)
+        submenus = result.scalars().fetchall()
         submenu_responses = []
-
         for submenu in submenus:
-            dishes_count = (
-                await self.session.query(func.count(Dish.id))
-                .filter(Dish.submenu_id == submenu.id)
-                .scalar()
+            dishes_query = select(func.count(Dish.id)).where(
+                Submenu.menu_id == target_menu_id,
             )
-
+            dishes_count = await self.session.execute(dishes_query)
+            dishes_result = len(dishes_count.scalars().fetchall())
             submenu_response = SubmenuResponse(
                 id=submenu.id,
                 title=submenu.title,
                 description=submenu.description,
                 menu_id=submenu.menu_id,
-                dishes_count=dishes_count,
+                dishes_count=dishes_result,
             )
-
             submenu_responses.append(submenu_response)
-
         return submenu_responses
 
     async def create(
-            self,
-            target_menu_id: uuid.UUID,
-            submenu_data: CreateSubmenuSchema,
+        self,
+        target_menu_id: uuid.UUID,
+        submenu_data: CreateSubmenuSchema,
     ) -> Submenu:
-        menu = await self.session.query(Menu).filter(Menu.id == target_menu_id).first()
-
+        stmt = select(Menu).where(Menu.id == target_menu_id)
+        result = await self.session.execute(stmt)
+        menu = result.scalars().first()
         if not menu:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="menu not found",
             )
-
         new_submenu = Submenu(**submenu_data.model_dump(), menu_id=target_menu_id)
         self.session.add(new_submenu)
         await self.session.commit()
@@ -67,46 +63,36 @@ class SubMenuRepository:
         return new_submenu
 
     async def get(
-            self,
-            target_menu_id: uuid.UUID,
-            target_submenu_id: uuid.UUID,
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
     ) -> FilteredSubmenuResponse:
-        submenu = (
-            await self.session.query(Submenu)
-            .filter(Submenu.id == target_submenu_id, Submenu.menu_id == target_menu_id)
-            .first()
-        )
+        submenu = await self.search_submenu(target_menu_id, target_submenu_id)
         if not submenu:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="submenu not found",
             )
-
-        dishes_count = (
-            await self.session.query(func.count(Dish.id))
-            .filter(Dish.submenu_id == target_submenu_id)
-            .scalar()
+        dishes_query = select(func.count(Dish.id)).filter(
+            Dish.submenu_id == target_submenu_id,
         )
-
+        dishes_count = await self.session.execute(dishes_query)
+        dishes_result = dishes_count.scalars().fetchall()
         return FilteredSubmenuResponse(
             id=submenu.id,
             title=submenu.title,
             description=submenu.description,
             menu_id=submenu.menu_id,
-            dishes_count=dishes_count,
+            dishes_count=dishes_result[0],
         )
 
     async def update(
-            self,
-            target_menu_id: uuid.UUID,
-            target_submenu_id: uuid.UUID,
-            submenu_data: UpdateSubmenuSchema,
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
+        submenu_data: UpdateSubmenuSchema,
     ) -> type[Submenu]:
-        submenu = (
-            await self.session.query(Submenu)
-            .filter(Submenu.id == target_submenu_id, Submenu.menu_id == target_menu_id)
-            .first()
-        )
+        submenu = await self.search_submenu(target_menu_id, target_submenu_id)
         if not submenu:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -120,16 +106,11 @@ class SubMenuRepository:
         return submenu
 
     async def delete(
-            self,
-            target_menu_id: uuid.UUID,
-            target_submenu_id: uuid.UUID,
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
     ) -> JSONResponse:
-        submenu = (
-            await self.session.query(Submenu)
-            .filter(Submenu.id == target_submenu_id, Submenu.menu_id == target_menu_id)
-            .first()
-        )
-
+        submenu = await self.search_submenu(target_menu_id, target_submenu_id)
         if not submenu:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -142,3 +123,12 @@ class SubMenuRepository:
             status_code=status.HTTP_200_OK,
             content={"message": f"Submenu {submenu.title} deleted successfully"},
         )
+
+    async def search_submenu(
+        self, target_menu_id: uuid.UUID, target_submenu_id: uuid.UUID,
+    ):
+        stmt = select(Submenu).where(
+            Submenu.menu_id == target_menu_id, Submenu.id == target_submenu_id,
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().first()

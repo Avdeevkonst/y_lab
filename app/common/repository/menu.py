@@ -2,7 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from starlette import status
 from starlette.responses import JSONResponse
@@ -19,58 +19,56 @@ class MenuRepository:
 
     # Функция для подсчета количества подменю и блюд, и выдачи списка меню
     async def get_all(self) -> list[GetAllMenu]:
-        menus = await self.session.query(self.model).all()
+        stmt = select(self.model)
+        result = await self.session.execute(stmt)
+        menus = result.scalars().fetchall()
         list_menu_responses = []
         for menu in menus:
-            submenus_count = (
-                self.session.query(Submenu).filter(Submenu.menu_id == menu.id).count()
+            submenus_query = select(func.count(Submenu.id)).filter(
+                Submenu.menu_id == menu.id,
             )
-            dishes_count = (
-                self.session.query(Dish)
+            dishes_query = (
+                select(func.count(Dish.id))
                 .join(Submenu)
                 .filter(Submenu.menu_id == menu.id)
-                .count()
             )
+            submenus_count = await self.session.execute(submenus_query)
+            dishes_count = await self.session.execute(dishes_query)
+            submenus_result = len(submenus_count.all())
+            dishes_result = len(dishes_count.all())
             menu_response = GetAllMenu(
                 id=menu.id,
                 title=menu.title,
                 description=menu.description,
-                submenus_count=submenus_count,
-                dishes_count=dishes_count,
+                submenus_count=submenus_result,
+                dishes_count=dishes_result,
             )
             list_menu_responses.append(menu_response)
         return list_menu_responses
 
     async def get(self, target_menu_id: uuid.UUID) -> GetAllMenu:
-        menu = (
-            await self.session.query(self.model)
-            .filter(self.model.id == target_menu_id)
-            .first()
-        )
-
+        menu = await self.search_menu(target_menu_id)
         if not menu:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="menu not found",
             )
-
-        submenus_count = (
-            await self.session.query(Submenu)
-            .filter(Submenu.menu_id == target_menu_id)
-            .count()
+        submenus_query = select(func.count(Submenu.id)).filter(
+            Submenu.menu_id == menu.id,
         )
-        dishes_count = (
-            await self.session.query(Dish)
-            .join(Submenu)
-            .filter(Submenu.menu_id == target_menu_id)
-            .count()
+        dishes_query = (
+            select(func.count(Dish.id)).join(Submenu).filter(Submenu.menu_id == menu.id)
         )
+        submenus_count = await self.session.execute(submenus_query)
+        dishes_count = await self.session.execute(dishes_query)
+        submenus_result = len(submenus_count.all())
+        dishes_result = len(dishes_count.all())
         return GetAllMenu(
             id=menu.id,
             title=menu.title,
             description=menu.description,
-            submenus_count=submenus_count,
-            dishes_count=dishes_count,
+            submenus_count=submenus_result,
+            dishes_count=dishes_result,
         )
 
     async def create(self, menu: CreateMenuSchema) -> Menu:
@@ -85,46 +83,26 @@ class MenuRepository:
         target_menu_id: uuid.UUID,
         menu_data: UpdateMenuSchema,
     ) -> type[Menu]:
-        stmt = select(self.model).where(self.model.id == target_menu_id)
-        result = await self.session.execute(stmt)
-        menu = result.scalars().first()
+        menu = await self.search_menu(target_menu_id)
         if not menu:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="menu not found",
             )
-
         menu.title = menu_data.title
         menu.description = menu_data.description
         await self.session.commit()
         await self.session.refresh(menu)
         return menu
 
-        # if not menu:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_404_NOT_FOUND,
-        #         detail="menu not found",
-        #     )
-        #
-        # menu.title = menu_data.title
-        # menu.description = menu_data.description
-        # await self.session.commit()
-        # await self.session.refresh(menu)
-        # return menu
-
     async def delete(self, target_menu_id: uuid.UUID) -> JSONResponse:
-        menu = (
-            await self.session.query(self.model)
-            .filter(self.model.id == target_menu_id)
-            .first()
-        )
+        menu = await self.search_menu(target_menu_id)
 
         if not menu:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="menu not found",
             )
-
         menu_title = menu.title
         await self.session.delete(menu)
         await self.session.commit()
@@ -132,3 +110,8 @@ class MenuRepository:
             status_code=status.HTTP_200_OK,
             content={"message": f"Menu {menu_title} deleted successfully"},
         )
+
+    async def search_menu(self, target_menu_id: uuid.UUID):
+        stmt = select(self.model).where(self.model.id == target_menu_id)
+        result = await self.session.execute(stmt)
+        return result.scalars().first()
