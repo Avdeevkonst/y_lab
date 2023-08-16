@@ -3,12 +3,14 @@ alembic==1.11.1
 annotated-types==0.5.0
 anyio==3.7.1
 async-timeout==4.0.2
+asyncpg==0.28.0
 black==23.7.0
 certifi==2023.7.22
 cffi==1.15.1
 cfgv==3.3.1
 click==8.1.6
 cryptography==41.0.3
+dirty-equals==0.6.0
 distlib==0.3.7
 exceptiongroup==1.1.2
 fastapi==0.100.0
@@ -44,6 +46,7 @@ pytest==7.4.0
 pytest-asyncio==0.21.1
 python-dateutil==2.8.2
 python-dotenv==1.0.0
+pytz==2023.3
 pytzdata==2020.1
 PyYAML==6.0.1
 redis==4.6.0
@@ -62,3 +65,8 @@ uvloop==0.17.0
 virtualenv==20.24.2
 watchfiles==0.19.0
 websockets==11.0.3
+
+pandas~=2.0.3
+celery~=5.3.1
+gspread~=5.10.0
+openpyxl~=3.1.2

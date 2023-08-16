@@ -125,10 +125,13 @@ class SubMenuRepository:
         )
 
     async def search_submenu(
-        self, target_menu_id: uuid.UUID, target_submenu_id: uuid.UUID,
+        self,
+        target_menu_id: uuid.UUID,
+        target_submenu_id: uuid.UUID,
     ):
         stmt = select(Submenu).where(
-            Submenu.menu_id == target_menu_id, Submenu.id == target_submenu_id,
+            Submenu.menu_id == target_menu_id,
+            Submenu.id == target_submenu_id,
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()

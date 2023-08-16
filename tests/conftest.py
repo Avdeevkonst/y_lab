@@ -1,39 +1,86 @@
+import asyncio
+from typing import AsyncGenerator
+
 import pytest
-from fastapi.testclient import TestClient
-from redis import asyncio
+from httpx import AsyncClient
 
-from app.db.database import Base, SessionLocal, engine, get_db
+from app.db.database import Base, engine
 from app.main import app
+from app.schemas import DishResponse, MenuResponse, SubmenuResponse
 
 
-def override_get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@pytest.fixture(autouse=True)
+async def _prepare_database() -> AsyncGenerator:
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+        yield
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
 
 
-app.dependency_overrides[get_db] = override_get_db
-client = TestClient(app)
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an instance of the default event loop for each test case."""
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
 
 
-@pytest.fixture(autouse=True, scope="session")
-def test_db():
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    yield db
-    db.close()
+@pytest.fixture()
+async def ac():
+    async with AsyncClient(app=app, base_url="http://localhost") as ac:
+        yield ac
 
 
-@pytest.fixture(autouse=True, scope="session")
-async def delete_cache():
-    redis = asyncio.from_url(
-        "redis://localhost",
-        encoding="utf8",
-        decode_responses=True,
+@pytest.fixture()
+async def default_menu(ac: AsyncClient) -> MenuResponse:
+    return MenuResponse.model_validate(
+        (
+            await ac.post(
+                "/api/v1/menus/",
+                json={
+                    "title": "summer menu",
+                    "description": "menu",
+                },
+            )
+        ).json(),
     )
-    await redis.flushall()
-    yield None
-    await redis.flushall()
+
+
+@pytest.fixture()
+async def default_submenu(
+    ac: AsyncClient,
+    default_menu: MenuResponse,
+) -> SubmenuResponse:
+    return SubmenuResponse.model_validate(
+        (
+            await ac.post(
+                f"/api/v1/menus/{default_menu.id}/submenus/",
+                json={
+                    "title": "georgian dishes",
+                    "description": "georgian dishes",
+                },
+            )
+        ).json(),
+    )
+
+
+@pytest.fixture()
+async def default_dish(
+    ac: AsyncClient,
+    default_menu: MenuResponse,
+    default_submenu: SubmenuResponse,
+) -> DishResponse:
+    return DishResponse.model_validate(
+        (
+            await ac.post(
+                f"/api/v1/menus/{default_menu.id}/submenus/{default_submenu.id}/dishes/",
+                json={
+                    "title": "kharcho",
+                    "description": "hearty soup",
+                    "price": "100.25",
+                },
+            )
+        ).json(),
+    )

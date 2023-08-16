@@ -49,17 +49,18 @@ class DishService:
         background_tasks: BackgroundTasks,
     ) -> Dish:
         item = await self.repository.create(
-            target_menu_id, target_submenu_id, dish_data,
+            target_menu_id,
+            target_submenu_id,
+            dish_data,
         )
         background_tasks.add_task(
-            self.cache.invalidate(
-                "all_dishes",
-                f"menu_{target_menu_id}",
-                f"submenu_{target_submenu_id}",
-                "all_menus",
-                "all_submenus",
-                "all_data",
-            ),
+            self.cache.invalidate,
+            "all_dishes",
+            f"menu_{target_menu_id}",
+            f"submenu_{target_submenu_id}",
+            "all_menus",
+            "all_submenus",
+            "all_data",
         )
 
         return item
@@ -79,7 +80,10 @@ class DishService:
             dish_data,
         )
         background_tasks.add_task(
-            self.cache.invalidate("all_dishes", f"dish_{target_dish_id}", "all_data"),
+            self.cache.invalidate,
+            "all_dishes",
+            f"dish_{target_dish_id}",
+            "all_data",
         )
         return item
 
@@ -91,17 +95,18 @@ class DishService:
         background_tasks: BackgroundTasks,
     ) -> JSONResponse:
         item = await self.repository.delete(
-            target_menu_id, target_submenu_id, target_dish_id,
+            target_menu_id,
+            target_submenu_id,
+            target_dish_id,
         )
         background_tasks.add_task(
-            self.cache.invalidate(
-                "all_dishes",
-                "all_submenus",
-                "all_menus",
-                f"dish_{target_dish_id}",
-                f"menu_{target_menu_id}",
-                f"submenu_{target_submenu_id}",
-                "all_data",
-            ),
+            self.cache.invalidate,
+            "all_dishes",
+            "all_submenus",
+            "all_menus",
+            f"dish_{target_dish_id}",
+            f"menu_{target_menu_id}",
+            f"submenu_{target_submenu_id}",
+            "all_data",
         )
         return item

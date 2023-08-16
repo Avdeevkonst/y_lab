@@ -26,10 +26,12 @@ class MenuService:
         )
 
     async def create(
-        self, menu: CreateMenuSchema, background_tasks: BackgroundTasks,
+        self,
+        menu: CreateMenuSchema,
+        background_tasks: BackgroundTasks,
     ) -> Menu:
         item = await self.repository.create(menu)
-        background_tasks.add_task(self.cache.invalidate("all_menus", "all_data"))
+        background_tasks.add_task(self.cache.invalidate, "all_menus", "all_data")
         return item
 
     async def update(
@@ -40,15 +42,23 @@ class MenuService:
     ) -> type[Menu]:
         item = await self.repository.update(target_menu_id, menu_data)
         background_tasks.add_task(
-            self.cache.invalidate("all_menus", f"menu_{target_menu_id}", "all_data"),
+            self.cache.invalidate,
+            "all_menus",
+            f"menu_{target_menu_id}",
+            "all_data",
         )
         return item
 
     async def delete(
-        self, target_menu_id: uuid.UUID, background_tasks: BackgroundTasks,
+        self,
+        target_menu_id: uuid.UUID,
+        background_tasks: BackgroundTasks,
     ) -> JSONResponse:
         item = await self.repository.delete(target_menu_id)
         background_tasks.add_task(
-            self.cache.invalidate("all_menus", f"menu_{target_menu_id}", "all_data"),
+            self.cache.invalidate,
+            "all_menus",
+            f"menu_{target_menu_id}",
+            "all_data",
         )
         return item

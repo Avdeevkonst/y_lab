@@ -1,79 +1,54 @@
-from tests.conftest import client
+from httpx import AsyncClient
+
+from app.schemas import MenuResponse
 
 prefix = "/api/v1"
 test_data: dict[str, str] = {}
 
 
-def test_get_all_menus():
+async def test_get_all_menus(ac: AsyncClient):
     url = f"{prefix}/menus/"
-    response = client.get(url)
+    response = await ac.get(url)
     assert response.status_code == 200
     assert response.json() == []
 
 
-# Создаем меню
-def test_create_menu():
+async def test_create_menu(ac: AsyncClient):
     url = f"{prefix}/menus/"
     data = {
         "title": "Test Menu",
         "description": "This is a test menu",
     }
-    response = client.post(url, json=data)
+    response = await ac.post(url, json=data)
     assert response.status_code == 201
-
-    test_data["target_menu_id"] = response.json().get("id")
-    test_data["target_menu_title"] = response.json().get("title")
-    test_data["target_menu_description"] = response.json().get("description")
-
-    assert test_data["target_menu_id"] is not None
-    assert test_data["target_menu_title"] == "Test Menu"
-    assert test_data["target_menu_description"] == "This is a test menu"
+    assert response.json()["title"] == "Test Menu"
+    assert response.json()["description"] == "This is a test menu"
 
 
-def test_get_menu():
-    target_menu_id = test_data.get("target_menu_id")
-    url = f"{prefix}/menus/{target_menu_id}/"
-    response = client.get(url)
+async def test_get_menu(ac: AsyncClient, default_menu: MenuResponse):
+    url = f"{prefix}/menus/{default_menu.id}"
+    response = await ac.get(url)
     assert response.status_code == 200
-    response_json = response.json()
-    assert response_json["id"] == target_menu_id
-    assert response_json["title"] == test_data.get("target_menu_title")
-    assert response_json["description"] == test_data.get("target_menu_description")
+    assert response.json()["id"] == default_menu.id
+    assert response.json()["title"] == default_menu.title
+    assert response.json()["description"] == default_menu.description
 
 
-def test_update_menu():
-    target_menu_id = test_data.get("target_menu_id")
-    url = f"{prefix}/menus/{target_menu_id}/"
+async def test_update_menu(ac: AsyncClient, default_menu: MenuResponse):
+    url = f"{prefix}/menus/{default_menu.id}"
     data = {
         "title": "Updated Test Menu",
         "description": "This is an updated test menu",
     }
-    response = client.patch(url, json=data)
+    response = await ac.patch(url, json=data)
     assert response.status_code == 200
-
-    assert test_data["target_menu_title"] != data["title"]
-    assert test_data["target_menu_description"] != data["description"]
-
-    test_data["target_menu_title"] = data["title"]
-    test_data["target_menu_description"] = data["description"]
-
-    assert test_data["target_menu_title"] == response.json().get("title")
-    assert test_data["target_menu_description"] == response.json().get("description")
+    assert response.json()["title"] == "Updated Test Menu"
+    assert response.json()["description"] == "This is an updated test menu"
 
 
-def test_delete_menu():
-    target_menu_id = test_data.get("target_menu_id")
-    url = f"{prefix}/menus/{target_menu_id}/"
-    response = client.delete(url)
-    assert response.status_code == 200
-
-
-def test_view_menu():
-    target_menu_id = test_data.get("target_menu_id")
-    url = f"{prefix}/menus/{target_menu_id}/"
-    response = client.get(url)
-
-    assert response.status_code == 404
-
-    response_json = response.json()
-    assert response_json["detail"] == "menu not found"
+async def test_delete_menu(ac: AsyncClient, default_menu: MenuResponse):
+    url = f"{prefix}/menus/{default_menu.id}"
+    response_delete = await ac.delete(url)
+    assert response_delete.status_code == 200
+    response_get = await ac.get(url)
+    assert response_get.status_code == 404

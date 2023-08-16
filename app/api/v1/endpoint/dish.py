@@ -16,8 +16,8 @@ router = APIRouter()
     summary="Возвращает список блюд",
 )
 async def get_all_dishes_handler(
-        target_submenu_id: uuid.UUID,
-        dish: Annotated[DishService, Depends()],
+    target_submenu_id: uuid.UUID,
+    dish: Annotated[DishService, Depends()],
 ):
     return await dish.get_all(target_submenu_id)
 
@@ -29,10 +29,10 @@ async def get_all_dishes_handler(
     summary="Возвращает определённое блюдо",
 )
 async def get_dish_handler(
-        target_menu_id: uuid.UUID,
-        target_submenu_id: uuid.UUID,
-        target_dish_id: uuid.UUID,
-        dish: Annotated[DishService, Depends()],
+    target_menu_id: uuid.UUID,
+    target_submenu_id: uuid.UUID,
+    target_dish_id: uuid.UUID,
+    dish: Annotated[DishService, Depends()],
 ):
     return await dish.get(target_menu_id, target_submenu_id, target_dish_id)
 
@@ -44,13 +44,18 @@ async def get_dish_handler(
     summary="Создаёт блюдо",
 )
 async def create_dish_handler(
-        target_menu_id: uuid.UUID,
-        target_submenu_id: uuid.UUID,
-        dish_data: CreateDishSchema,
-        dish: Annotated[DishService, Depends()],
-        background_tasks: BackgroundTasks,
+    target_menu_id: uuid.UUID,
+    target_submenu_id: uuid.UUID,
+    dish_data: CreateDishSchema,
+    dish: Annotated[DishService, Depends()],
+    background_tasks: BackgroundTasks,
 ):
-    return await dish.create(target_menu_id, target_submenu_id, dish_data, background_tasks)
+    return await dish.create(
+        target_menu_id,
+        target_submenu_id,
+        dish_data,
+        background_tasks,
+    )
 
 
 @router.patch(
@@ -60,15 +65,19 @@ async def create_dish_handler(
     summary="Обновляет блюдо",
 )
 async def update_dish_handler(
-        target_menu_id: uuid.UUID,
-        target_submenu_id: uuid.UUID,
-        target_dish_id: uuid.UUID,
-        dish_data: Annotated[UpdateDishSchema, Body(...)],
-        dish: Annotated[DishService, Depends()],
-        background_tasks: BackgroundTasks,
+    target_menu_id: uuid.UUID,
+    target_submenu_id: uuid.UUID,
+    target_dish_id: uuid.UUID,
+    dish_data: Annotated[UpdateDishSchema, Body(...)],
+    dish: Annotated[DishService, Depends()],
+    background_tasks: BackgroundTasks,
 ):
     return await dish.update(
-        target_menu_id, target_submenu_id, target_dish_id, dish_data, background_tasks
+        target_menu_id,
+        target_submenu_id,
+        target_dish_id,
+        dish_data,
+        background_tasks,
     )
 
 
@@ -79,10 +88,15 @@ async def update_dish_handler(
     summary="Удаляет блюдо",
 )
 async def delete_dish_handler(
-        target_menu_id: uuid.UUID,
-        target_submenu_id: uuid.UUID,
-        target_dish_id: uuid.UUID,
-        dish: Annotated[DishService, Depends()],
-        background_tasks: BackgroundTasks,
+    target_menu_id: uuid.UUID,
+    target_submenu_id: uuid.UUID,
+    target_dish_id: uuid.UUID,
+    dish: Annotated[DishService, Depends()],
+    background_tasks: BackgroundTasks,
 ):
-    return await dish.delete(target_menu_id, target_submenu_id, target_dish_id, background_tasks)
+    return await dish.delete(
+        target_menu_id,
+        target_submenu_id,
+        target_dish_id,
+        background_tasks,
+    )

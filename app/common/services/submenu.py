@@ -46,12 +46,11 @@ class SubMenuService:
         background_tasks: BackgroundTasks,
     ) -> Submenu:
         background_tasks.add_task(
-            self.cache.invalidate(
-                f"menu_{target_menu_id}",
-                "all_submenus",
-                "all_menus",
-                "all_data",
-            ),
+            self.cache.invalidate,
+            f"menu_{target_menu_id}",
+            "all_submenus",
+            "all_menus",
+            "all_data",
         )
         return await self.repository.create(target_menu_id, submenu)
 
@@ -63,12 +62,15 @@ class SubMenuService:
         background_tasks: BackgroundTasks,
     ) -> type[Submenu]:
         item = await self.repository.update(
-            target_menu_id, target_submenu_id, submenu_data,
+            target_menu_id,
+            target_submenu_id,
+            submenu_data,
         )
         background_tasks.add_task(
-            self.cache.invalidate(
-                "all_submenus", f"submenu_{target_submenu_id}", "all_data",
-            ),
+            self.cache.invalidate,
+            "all_submenus",
+            f"submenu_{target_submenu_id}",
+            "all_data",
         )
         return item
 
@@ -80,12 +82,11 @@ class SubMenuService:
     ) -> JSONResponse:
         item = await self.repository.delete(target_menu_id, target_submenu_id)
         background_tasks.add_task(
-            self.cache.invalidate(
-                "all_submenus",
-                "all_menus",
-                f"submenu_{target_submenu_id}",
-                f"menu_{target_menu_id}",
-                "all_data",
-            ),
+            self.cache.invalidate,
+            "all_submenus",
+            "all_menus",
+            f"submenu_{target_submenu_id}",
+            f"menu_{target_menu_id}",
+            "all_data",
         )
         return item

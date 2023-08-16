@@ -35,7 +35,8 @@ class DishRepository:
         result_dish = await self.session.execute(stmt_dish)
         menu = result_dish.scalars().first()
         stmt_submenu = select(Submenu).where(
-            Submenu.menu_id == target_menu_id, Submenu.id == target_submenu_id,
+            Submenu.menu_id == target_menu_id,
+            Submenu.id == target_submenu_id,
         )
         result_submenu = await self.session.execute(stmt_submenu)
         submenu = result_submenu.scalars().first()
@@ -122,10 +123,14 @@ class DishRepository:
         target_submenu_id: uuid.UUID,
         target_dish_id: uuid.UUID,
     ):
-        stmt = select(Dish).where(
-            Submenu.menu_id == target_menu_id,
-            Dish.submenu_id == target_submenu_id,
-            Dish.id == target_dish_id,
+        stmt = (
+            select(Dish)
+            .join(Submenu, Dish.submenu)
+            .where(
+                Submenu.menu_id == target_menu_id,
+                Dish.submenu_id == target_submenu_id,
+                Dish.id == target_dish_id,
+            )
         )
         result = await self.session.execute(stmt)
         return result.scalars().first()

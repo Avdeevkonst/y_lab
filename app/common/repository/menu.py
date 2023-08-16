@@ -56,19 +56,19 @@ class MenuRepository:
         submenus_query = select(func.count(Submenu.id)).filter(
             Submenu.menu_id == menu.id,
         )
-        dishes_query = (
-            select(func.count(Dish.id)).join(Submenu).filter(Submenu.menu_id == menu.id)
+        dishes_query = select(func.count(Dish.id)).filter(
+            Dish.submenu_id == Submenu.id,
         )
-        submenus_count = await self.session.execute(submenus_query)
         dishes_count = await self.session.execute(dishes_query)
-        submenus_result = len(submenus_count.all())
-        dishes_result = len(dishes_count.all())
+        dishes_result = dishes_count.scalars().fetchall()
+        submenus_count = await self.session.execute(submenus_query)
+        submenus_result = submenus_count.scalars().fetchall()
         return GetAllMenu(
             id=menu.id,
             title=menu.title,
             description=menu.description,
-            submenus_count=submenus_result,
-            dishes_count=dishes_result,
+            submenus_count=submenus_result[0],
+            dishes_count=dishes_result[0],
         )
 
     async def create(self, menu: CreateMenuSchema) -> Menu:
