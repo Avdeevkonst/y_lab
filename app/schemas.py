@@ -99,3 +99,21 @@ class NestedDataMenu(BaseModel):
     submenu: list[NestedDataSubmenu]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DishSchema(BaseModel):
+    title: str
+    description: str
+    price: str
+
+
+class SubmenuSchema(BaseModel):
+    title: str
+    description: str | None
+    dishes: list[DishSchema]
+
+
+class MenuSchema(BaseModel):
+    title: str
+    description: str | None
+    submenu: list[SubmenuSchema]

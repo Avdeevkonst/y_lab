@@ -1,5 +1,4 @@
 import asyncio
-from typing import AsyncGenerator
 
 import pytest
 from httpx import AsyncClient
@@ -10,11 +9,8 @@ from app.schemas import DishResponse, MenuResponse, SubmenuResponse
 
 
 @pytest.fixture(autouse=True)
-async def _prepare_database() -> AsyncGenerator:
+async def _prepare_database():
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
-        yield
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 

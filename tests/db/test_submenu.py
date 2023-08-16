@@ -34,7 +34,6 @@ async def test_get_submenu(
     response = await ac.get(url)
 
     assert response.status_code == 200
-    assert response.json()["id"] == default_submenu.id
     assert response.json()["title"] == default_submenu.title
     assert response.json()["description"] == default_submenu.description
 

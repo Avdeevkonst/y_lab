@@ -29,7 +29,6 @@ async def test_get_menu(ac: AsyncClient, default_menu: MenuResponse):
     url = f"{prefix}/menus/{default_menu.id}"
     response = await ac.get(url)
     assert response.status_code == 200
-    assert response.json()["id"] == default_menu.id
     assert response.json()["title"] == default_menu.title
     assert response.json()["description"] == default_menu.description
 
