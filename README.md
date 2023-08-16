@@ -31,3 +31,5 @@ docker-compose -f docker-compose-test.yaml up -d
 
 ## Дополнительные задания:
 Обновление меню из google sheets раз в 15 сек. в папке app.celery.tasks.py
+https://docs.google.com/spreadsheets/d/1CKvxZQWP8TwJUt0t-tFUFqKkhAsm9EkrHpxUk21JEKM/edit
+в файле credentials.json специально убран ключ "client_secret", для его получения необходимо мне написать в личные сообщения на портале ylab
