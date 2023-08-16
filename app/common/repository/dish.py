@@ -17,20 +17,17 @@ class DishRepository:
         self.session: Session = session
         self.model = Dish
 
-    # Возвращает все блюда для определенного подменю
     async def get_all(self, target_submenu_id: uuid.UUID) -> list[type[Dish]]:
         stmt_dish = select(self.model).where(self.model.submenu_id == target_submenu_id)
         result_dish = await self.session.execute(stmt_dish)
         return result_dish.scalars().fetchall()
 
-    # Создаёт блюдо для указанного подменю
     async def create(
         self,
         target_menu_id: uuid.UUID,
         target_submenu_id: uuid.UUID,
         dish_data: CreateDishSchema,
     ) -> Dish:
-        # Проверяем, существуют ли указанные меню и подменю
         stmt_dish = select(Menu).where(Menu.id == target_menu_id)
         result_dish = await self.session.execute(stmt_dish)
         menu = result_dish.scalars().first()
@@ -52,14 +49,12 @@ class DishRepository:
                 detail="submenu not found",
             )
 
-        # Создаем новое блюдо
         new_dish = Dish(**dish_data.model_dump(), submenu_id=target_submenu_id)
         self.session.add(new_dish)
         await self.session.commit()
         await self.session.refresh(new_dish)
         return new_dish
 
-    # Возвращает блюдо по ero ID и принадлежности к указанному меню и подменю
     async def get(
         self,
         target_menu_id: uuid.UUID,
@@ -74,7 +69,6 @@ class DishRepository:
             )
         return dish
 
-    # Обновляет блюдо по ero ID и принадлежности к указанному меню и подменю
     async def update(
         self,
         target_menu_id: uuid.UUID,
@@ -96,7 +90,6 @@ class DishRepository:
         await self.session.refresh(dish)
         return dish
 
-    # Удаляет блюдо по ero ID и принадлежности к указанному меню и подменю
     async def delete(
         self,
         target_menu_id: uuid.UUID,

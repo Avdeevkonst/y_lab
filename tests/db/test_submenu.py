@@ -11,7 +11,6 @@ async def test_get_all_submenus(ac: AsyncClient, default_menu: MenuResponse):
     assert response.json() == []
 
 
-# Создаем подменю
 async def test_create_submenu(ac: AsyncClient, default_menu: MenuResponse):
     url = f"{prefix}/menus/{default_menu.id}/submenus/"
     data = {
@@ -24,7 +23,6 @@ async def test_create_submenu(ac: AsyncClient, default_menu: MenuResponse):
     assert response.json()["description"] == "This is a test submenu"
 
 
-# Просматриваем определенное подменю
 async def test_get_submenu(
     ac: AsyncClient,
     default_menu: MenuResponse,
@@ -38,7 +36,6 @@ async def test_get_submenu(
     assert response.json()["description"] == default_submenu.description
 
 
-# Обновляем определенное подменю
 async def test_update_submenu(
     ac: AsyncClient,
     default_menu: MenuResponse,
@@ -55,7 +52,6 @@ async def test_update_submenu(
     assert response.json()["description"] == "This is an updated submenu"
 
 
-# Удаляем подменю
 async def test_delete_submenu(
     ac: AsyncClient,
     default_menu: MenuResponse,

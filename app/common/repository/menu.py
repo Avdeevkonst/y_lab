@@ -17,7 +17,6 @@ class MenuRepository:
         self.session: Session = session
         self.model = Menu
 
-    # Функция для подсчета количества подменю и блюд, и выдачи списка меню
     async def get_all(self) -> list[GetAllMenu]:
         stmt = select(self.model)
         result = await self.session.execute(stmt)

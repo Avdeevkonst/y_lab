@@ -17,7 +17,6 @@ from app.schemas import (
 router = APIRouter()
 
 
-# Возвращает все меню
 @router.get("/", response_model=list[MenuResponse])
 async def get_all_menus(
     menu: Annotated[MenuService, Depends()],
@@ -25,13 +24,11 @@ async def get_all_menus(
     return await menu.get_all()
 
 
-# Возвращает меню
 @router.get("/{target_menu_id}", response_model=GetAllMenu)
 async def get_menu(target_menu_id: uuid.UUID, menu: Annotated[MenuService, Depends()]):
     return await menu.get(target_menu_id)
 
 
-# Создаёт меню
 @router.post("/", response_model=MenuResponse, status_code=status.HTTP_201_CREATED)
 async def create_menu(
     menu_data: CreateMenuSchema,
@@ -41,7 +38,6 @@ async def create_menu(
     return await menu.create(menu_data, background_tasks)
 
 
-# Обновляет меню
 @router.patch("/{target_menu_id}", response_model=MenuResponse)
 async def update_menu(
     target_menu_id: uuid.UUID,
@@ -52,7 +48,6 @@ async def update_menu(
     return await menu.update(target_menu_id, menu_data, background_tasks)
 
 
-# Удаляет меню
 @router.delete("/{target_menu_id}", status_code=status.HTTP_200_OK)
 async def delete_menu(
     target_menu_id: uuid.UUID,

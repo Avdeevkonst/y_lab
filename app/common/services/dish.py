@@ -10,11 +10,6 @@ from app.schemas import CreateDishSchema, UpdateDishSchema
 from cache.my_redis import isinstance_cache
 
 
-class DishCache:
-    # методы кеширования
-    pass
-
-
 class DishService:
     def __init__(self, repository: Annotated[DishRepository, Depends()]):
         self.repository = repository
